@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapsGenerator", "MapsGenerator\MapsGenerator.csproj", "{1084F223-5424-47E8-9A0C-0BEB0BFF3381}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapsGenerator.Test", "MapsGenerator.Test\MapsGenerator.Test.csproj", "{1289ACD9-4E66-4873-A36B-729ECEA2F488}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1084F223-5424-47E8-9A0C-0BEB0BFF3381}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1084F223-5424-47E8-9A0C-0BEB0BFF3381}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1084F223-5424-47E8-9A0C-0BEB0BFF3381}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1084F223-5424-47E8-9A0C-0BEB0BFF3381}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1289ACD9-4E66-4873-A36B-729ECEA2F488}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1289ACD9-4E66-4873-A36B-729ECEA2F488}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1289ACD9-4E66-4873-A36B-729ECEA2F488}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1289ACD9-4E66-4873-A36B-729ECEA2F488}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BB14FAB6-4E65-4564-921B-BA69E98E1969}
+	EndGlobalSection
+EndGlobal
