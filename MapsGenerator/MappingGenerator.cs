@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -52,7 +53,7 @@ public class MappingGenerator : IIncrementalGenerator
             static (spc, source) => Execute(source.Left, source.Right, spc));
     }
 
-    private static void Execute(Compilation _, ImmutableArray<ClassDeclarationSyntax?> classes,
+    private static void Execute(Compilation compilation, ImmutableArray<ClassDeclarationSyntax?> classes,
         SourceProductionContext context)
     {
         if (classes.IsDefaultOrEmpty)
@@ -67,7 +68,7 @@ public class MappingGenerator : IIncrementalGenerator
 
         foreach (var classDeclarationSyntax in distinctClasses)
         {
-            context.AddSource("MapperImplementation", new SourceWriter(classDeclarationSyntax).GenerateSource());
+            context.AddSource("MapperImplementation", new SourceWriter(classDeclarationSyntax, compilation).GenerateSource());
         }
     }
 
@@ -77,10 +78,12 @@ public class MappingGenerator : IIncrementalGenerator
 public class SourceWriter
 {
     private readonly ClassDeclarationSyntax _classDeclarationSyntax;
+    private readonly Compilation _compilation;
 
-    public SourceWriter(ClassDeclarationSyntax classDeclarationSyntax)
+    public SourceWriter(ClassDeclarationSyntax classDeclarationSyntax, Compilation compilation)
     {
         _classDeclarationSyntax = classDeclarationSyntax;
+        _compilation = compilation;
     }
 
     public string GenerateSource()
@@ -110,24 +113,41 @@ public class SourceWriter
         builder.AppendLine("}", indent);
     }
 
-    private void AddMethodsDeclaration(StringBuilder stringBuilder, int indent)
+    private void AddMethodsDeclaration(StringBuilder builder, int indent)
     {
         indent++;
         if (!Filter.TryFindMapsInvocations(_classDeclarationSyntax, out var maps))
         {
-            stringBuilder.AppendLine("no maps were found.", indent);
+            builder.AppendLine("no maps were found.", indent);
             return;
         }
 
         foreach (var map in maps)
         {
-            var typeArguments = GetTypeArguments(map);
+            var typeArguments = GetTypeArguments(map).ToArray();
+            var source = GetTypeSyntaxName(typeArguments[0]);
+            var destination = GetTypeSyntaxName(typeArguments[1]);        
+            var sourceFullName = GetTypeSyntaxFullName(typeArguments[0]);
+            var destinationFullName = GetTypeSyntaxFullName(typeArguments[1]);
+
+
+            builder.AppendLine($"public {destinationFullName} {source}_To_{destination}({sourceFullName} source)", indent);
+            builder.AppendLine("{", indent);
+            //todo add body
+            builder.AppendLine("}", indent);
         }
     }
 
-    private SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
+    private static string GetTypeSyntaxName(TypeSyntax typeSyntax)
+        => (typeSyntax as IdentifierNameSyntax)?.Identifier.Text ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
+
+    private string GetTypeSyntaxFullName(ExpressionSyntax typeSyntax) 
+        => _compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString() 
+           ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
+
+    private static SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
     {
-        if (map.Expression is GenericNameSyntax genericMethodName )
+        if (map.Expression is GenericNameSyntax genericMethodName)
         {
             return genericMethodName.TypeArgumentList.Arguments;
         }
