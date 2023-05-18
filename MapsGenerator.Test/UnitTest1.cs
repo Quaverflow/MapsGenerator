@@ -71,42 +71,16 @@ public class UnitTest1
         var source = @"
 using MapsGenerator;
 
-[MappingGenerator]
-public class Colour
+[Mapper]
+internal class PersonProfile : MapperBase
 {
-    Red = 0,
-    Blue = 1,
+    public PersonProfile()
+    {
+        Map<Person, PersonDto>();
+    }
 }";
 
         // Pass the source code to our helper and snapshot test the output
         return TestHelper.Verify(source);
     }
 }
-public class Person
-{
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public int Age { get; set; }
-    public Address Address { get; set; }
-}
-
-public class Address
-{
-    public string Street { get; set; }
-    public string City { get; set; }
-}
-
-public class PersonDto
-{
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public int Age { get; set; }
-    public AddressDto Address { get; set; }
-}
-
-public class AddressDto
-{
-    public string Street { get; set; }
-    public string City { get; set; }
-}
-

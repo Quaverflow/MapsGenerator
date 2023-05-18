@@ -1,18 +1,27 @@
 ﻿using System.Collections.Immutable;
+using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace MapsGenerator;
+
 public static class SourceGenerationHelper
 {
-    public const string Attribute = @"
+    public const string Mapper = @"
 namespace MapsGenerator
 {
-    [System.AttributeUsage(System.AttributeTargets.Class)]
-    public class MappingGeneratorAttribute : System.Attribute
+    internal abstract classDeclarationSyntax MapperBase
     {
+        protected void Map<TSource, TDestination>()
+        {
+        }   
+
+        protected void Map<TSource, TDestination>(Action<TSource, TDestination> options)
+        {
+        }
     }
 }";
 }
@@ -23,15 +32,16 @@ public class MappingGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Add the marker attribute
-        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-            "MappingGeneratorAttribute.g.cs",
-            SourceText.From(SourceGenerationHelper.Attribute, Encoding.UTF8)));
+        context.RegisterPostInitializationOutput(ctx =>
+        {
+            ctx.AddSource("MapperBase.g.cs", SourceText.From(SourceGenerationHelper.Mapper, Encoding.UTF8));
+        });
 
         var enumDeclarations = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (s, _) => IsSyntaxTargetForGeneration(s), // select classes with attributes
-                transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx)) // sect the enum with the [EnumExtensions] attribute
-            .Where(static m => m is not null)!; // filter out attributed classes that we don't care about
+                predicate: static (s, _) => Filter.IsSyntaxTargetForGeneration(s),
+                transform: static (ctx, _) => Filter.GetSemanticTargetForGeneration(ctx))
+            .Where(static m => m is not null)!;
 
         // Combine the selected classes with the `Compilation`
         var compilationAndEnums
@@ -39,12 +49,10 @@ public class MappingGenerator : IIncrementalGenerator
 
         // Generate the source using the compilation and classes
         context.RegisterSourceOutput(compilationAndEnums,
-            static (spc, source) => Execute(source.Item1, source.Item2, spc));
+            static (spc, source) => Execute(source.Left, source.Right, spc));
     }
 
-
-
-    private static void Execute(Compilation _, ImmutableArray<ClassDeclarationSyntax> classes,
+    private static void Execute(Compilation _, ImmutableArray<ClassDeclarationSyntax?> classes,
         SourceProductionContext context)
     {
         if (classes.IsDefaultOrEmpty)
@@ -52,38 +60,101 @@ public class MappingGenerator : IIncrementalGenerator
             return;
         }
 
-        var distinctClasses = classes.Distinct().ToArray().FirstOrDefault();
+        var distinctClasses = classes
+            .OfType<ClassDeclarationSyntax>() //to avoid annoying nullability issues
+            .Distinct()
+            .ToArray();
 
-        var name = distinctClasses?.Identifier.Text ?? "hello.g.cs";
-        context.AddSource(name, "It works!");
+        foreach (var classDeclarationSyntax in distinctClasses)
+        {
+            context.AddSource("MapperImplementation", new SourceWriter(classDeclarationSyntax).GenerateSource());
+        }
     }
 
-    private static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+
+}
+
+public class SourceWriter
+{
+    private readonly ClassDeclarationSyntax _classDeclarationSyntax;
+
+    public SourceWriter(ClassDeclarationSyntax classDeclarationSyntax)
     {
-        var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
+        _classDeclarationSyntax = classDeclarationSyntax;
+    }
 
-        foreach (var attributeListSyntax in classDeclarationSyntax.AttributeLists)
+    public string GenerateSource()
+    {
+        var stringBuilder = new StringBuilder();
+
+        AddNamespace(stringBuilder, 0);
+
+        return stringBuilder.ToString();
+    }
+
+
+    private void AddNamespace(StringBuilder builder, int indent)
+    {
+        builder.AppendLine("namespace MapsGenerator", indent);
+        builder.AppendLine("{", indent);
+        AddClass(builder, indent);
+        builder.AppendLine("}", indent);
+    }
+
+    private void AddClass(StringBuilder builder, int indent)
+    {
+        indent++;
+        builder.AppendLine("public classDeclarationSyntax MapperImplementation", indent);
+        builder.AppendLine("{", indent);
+        AddMethodsDeclaration(builder, indent);
+        builder.AppendLine("}", indent);
+    }
+
+    private void AddMethodsDeclaration(StringBuilder stringBuilder, int indent)
+    {
+        indent++;
+        if (!Filter.TryFindMapsInvocations(_classDeclarationSyntax, out var maps))
         {
-            foreach (var attributeSyntax in attributeListSyntax.Attributes)
-            {
-                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-                {
-                    continue;
-                }
-
-                var attributeContainingTypeSymbol = attributeSymbol.ContainingType;
-                var fullName = attributeContainingTypeSymbol.ToDisplayString();
-
-                if (fullName == "MapsGenerator.MappingGeneratorAttribute")
-                {
-                    return classDeclarationSyntax;
-                }
-            }
+            stringBuilder.AppendLine("no maps were found.", indent);
+            return;
         }
 
-        return null;
+        foreach (var map in maps)
+        {
+            var typeArguments = GetTypeArguments(map);
+        }
     }
 
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode node)
-        => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 };
+    private SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
+    {
+        if (map.Expression is GenericNameSyntax genericMethodName )
+        {
+            return genericMethodName.TypeArgumentList.Arguments;
+        }
+
+        throw new InvalidOperationException("couldn't find type arguments");
+    }
+}
+
+public static class StringBuilderExtensions
+{
+    private const string Space = "    ";
+
+    public static void AppendLine(this StringBuilder builder, string text, int indent)
+        => builder.AppendLine(Space.Repeat(indent) + text);
+}
+
+public static class StringExtensions
+{
+    public static string Repeat(this string text, int n)
+    {
+        var textAsSpan = text.AsSpan();
+        var span = new Span<char>(new char[textAsSpan.Length * n]);
+        for (var i = 0; i < n; i++)
+        {
+            textAsSpan.CopyTo(span.Slice(i * textAsSpan.Length, textAsSpan.Length));
+        }
+
+        return span.ToString();
+    }
 }

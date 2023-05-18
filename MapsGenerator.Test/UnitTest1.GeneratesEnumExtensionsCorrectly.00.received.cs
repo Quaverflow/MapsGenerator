@@ -1,9 +1,15 @@
-﻿//HintName: MappingGeneratorAttribute.g.cs
+﻿//HintName: MapperBase.g.cs
 
 namespace MapsGenerator
 {
-    [System.AttributeUsage(System.AttributeTargets.Class)]
-    public class MappingGeneratorAttribute : System.Attribute
+    internal abstract classDeclarationSyntax MapperBase
     {
+        protected void Map<TSource, TDestination>()
+        {
+        }   
+
+        protected void Map<TSource, TDestination>(Action<TSource, TDestination> options)
+        {
+        }
     }
 }
