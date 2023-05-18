@@ -8,7 +8,7 @@ namespace MapsGenerator
         {
         }   
 
-        protected void Map<TSource, TDestination>(Action<TSource, TDestination> options)
+        protected void Map<TSource, TDestination>(MapsGeneratorOptions<TSource, TDestination> options)
         {
         }
     }

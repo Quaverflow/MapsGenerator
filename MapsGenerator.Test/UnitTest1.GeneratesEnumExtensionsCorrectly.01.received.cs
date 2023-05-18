@@ -1,27 +1,31 @@
-﻿//HintName: MapperImplementation.cs
+﻿//HintName: MapperOptions.g.cs
+
 namespace MapsGenerator
 {
-    public classDeclarationSyntax MapperImplementation
+    internal class MapsGeneratorOptions<TSource, TDestination>
     {
-        public somenamespace.PersonDto Person_To_somenamespacePersonDto(somenamespace.Person source)
+        public void Exclude(Action<TDestination> destinationProperty)
         {
-            return new somenamespace.PersonDto
-            {
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                Age = source.Age,
-                Address = Address_To_somenamespaceAddressDto(source.Address)
-            }
         }
 
-        public somenamespace.AddressDto Address_To_somenamespaceAddressDto(somenamespace.Address source)
+        /// <summary>
+        /// For properties with mismatching names
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sourceProperty"></param>
+        /// <param name="destinationProperty"></param>
+        public void MapFrom(Action<TDestination> sourceProperty, Action<TDestination> destinationProperty)
         {
-            return new somenamespace.AddressDto
-            {
-                Street = source.Street,
-                City = source.City,
-            }
+        }   
+        
+        /// <summary>
+        /// Completely custom mapping. Will not attempt to match nested property if it's a complex object
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="destinationProperty"></param>
+        public void CustomMap<T>(T source, Action<TDestination> destinationProperty)
+        {
         }
-
     }
 }

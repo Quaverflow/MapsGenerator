@@ -20,7 +20,37 @@ namespace MapsGenerator
         {
         }   
 
-        protected void Map<TSource, TDestination>(Action<TSource, TDestination> options)
+        protected void Map<TSource, TDestination>(MapsGeneratorOptions<TSource, TDestination> options)
+        {
+        }
+    }
+}"; 
+    public const string MapperOptions = @"
+namespace MapsGenerator
+{
+    internal class MapsGeneratorOptions<TSource, TDestination>
+    {
+        public void Exclude(Action<TDestination> destinationProperty)
+        {
+        }
+
+        /// <summary>
+        /// For properties with mismatching names
+        /// </summary>
+        /// <typeparam name=""T""></typeparam>
+        /// <param name=""sourceProperty""></param>
+        /// <param name=""destinationProperty""></param>
+        public void MapFrom(Action<TDestination> sourceProperty, Action<TDestination> destinationProperty)
+        {
+        }   
+        
+        /// <summary>
+        /// Completely custom mapping. Will not attempt to match nested property if it's a complex object
+        /// </summary>
+        /// <typeparam name=""T""></typeparam>
+        /// <param name=""source""></param>
+        /// <param name=""destinationProperty""></param>
+        public void CustomMap<T>(T source, Action<TDestination> destinationProperty)
         {
         }
     }
@@ -36,6 +66,7 @@ public class MappingGenerator : IIncrementalGenerator
         context.RegisterPostInitializationOutput(ctx =>
         {
             ctx.AddSource("MapperBase.g.cs", SourceText.From(SourceGenerationHelper.Mapper, Encoding.UTF8));
+            ctx.AddSource("MapperOptions.g.cs", SourceText.From(SourceGenerationHelper.MapperOptions, Encoding.UTF8));
         });
 
         var declarations = context.SyntaxProvider
@@ -162,7 +193,7 @@ public class SourceWriter
         {
             if (_maps.FirstOrDefault(x =>
                     x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
-                    x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) is {} map)
+                    x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) is { } map)
             {
                 builder.AppendLine($"{complexProperty.DestinationProperty.Name} = {map.MappingName}(source.{complexProperty.SourceProperty.Name})", indent);
             }
