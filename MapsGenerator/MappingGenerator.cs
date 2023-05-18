@@ -125,24 +125,79 @@ public class SourceWriter
         foreach (var map in maps)
         {
             var typeArguments = GetTypeArguments(map).ToArray();
-            var source = GetTypeSyntaxName(typeArguments[0]);
-            var destination = GetTypeSyntaxName(typeArguments[1]);        
-            var sourceFullName = GetTypeSyntaxFullName(typeArguments[0]);
-            var destinationFullName = GetTypeSyntaxFullName(typeArguments[1]);
+            var mappingInfo = new MappingInfo(
+                typeArguments[0],
+                typeArguments[1],
+                GetTypeSyntaxName(typeArguments[0]),
+                GetTypeSyntaxName(typeArguments[1]),
+                GetTypeSyntaxFullName(typeArguments[0]),
+                GetTypeSyntaxFullName(typeArguments[1]));
 
-
-            builder.AppendLine($"public {destinationFullName} {source}_To_{destination}({sourceFullName} source)", indent);
+            builder.AppendLine($"public {mappingInfo.DestinationFullName} {mappingInfo.SourceName}_To_{mappingInfo.DestinationName}({mappingInfo.SourceFullName} source)", indent);
             builder.AppendLine("{", indent);
-            //todo add body
+            AddMethodBody(builder, mappingInfo, indent);
             builder.AppendLine("}", indent);
         }
+    }
+
+    private void AddMethodBody(StringBuilder builder, MappingInfo mappingInfo, int indent)
+    {
+        indent++;
+        builder.AppendLine($"return new {mappingInfo.DestinationFullName}", indent);
+        builder.AppendLine("{", indent);
+        AddClassInitializationBody(builder, mappingInfo, indent);
+        builder.AppendLine("}", indent);
+    }
+
+    private void AddClassInitializationBody(StringBuilder builder, MappingInfo mappingInfo, int indent)
+    {
+        indent++;
+        var sourceProperties = GetProperties(mappingInfo.Source);
+        var destinationProperties = GetProperties(mappingInfo.Destination);
+
+        var simplePropertiesMatchingByName = GetMatchingProperties(
+            sourceProperties.Where(IsSimplePropertySymbol),
+            destinationProperties.Where(IsSimplePropertySymbol).ToArray());
+
+        foreach (var simpleProperty in simplePropertiesMatchingByName)
+        {
+            builder.AppendLine($"{simpleProperty} = source.{simpleProperty},", indent);
+        }
+    }
+    private List<string> GetMatchingProperties(IEnumerable<IPropertySymbol> sourceProperties, IPropertySymbol[] destinationProperties)
+    {
+        var matchingProperties = new List<string>();
+
+        foreach (var sourceProperty in sourceProperties)
+        {
+            var destinationProperty = destinationProperties.FirstOrDefault(p => p.Name == sourceProperty.Name);
+
+            if (destinationProperty != null && sourceProperty.Type.Equals(destinationProperty.Type))
+            {
+                matchingProperties.Add(destinationProperty.Name);
+            }
+        }
+
+        return matchingProperties;
+    }
+
+    private bool IsSimplePropertySymbol(IPropertySymbol property)
+        => property.Type.TypeKind != TypeKind.Class || property.Type.SpecialType == SpecialType.System_String;
+
+    private IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax)
+    {
+        var semanticModel = _compilation.GetSemanticModel(typeSyntax.SyntaxTree);
+
+        return semanticModel.GetSymbolInfo(typeSyntax).Symbol is not INamedTypeSymbol typeSymbol
+            ? Enumerable.Empty<IPropertySymbol>()
+            : typeSymbol.GetMembers().OfType<IPropertySymbol>();
     }
 
     private static string GetTypeSyntaxName(TypeSyntax typeSyntax)
         => (typeSyntax as IdentifierNameSyntax)?.Identifier.Text ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
 
-    private string GetTypeSyntaxFullName(ExpressionSyntax typeSyntax) 
-        => _compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString() 
+    private string GetTypeSyntaxFullName(ExpressionSyntax typeSyntax)
+        => _compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
            ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
 
     private static SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
@@ -177,4 +232,24 @@ public static class StringExtensions
 
         return span.ToString();
     }
+}
+
+public class MappingInfo
+{
+    public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName, string sourceFullName, string destinationFullName)
+    {
+        Source = source;
+        Destination = destination;
+        SourceName = sourceName;
+        DestinationName = destinationName;
+        SourceFullName = sourceFullName;
+        DestinationFullName = destinationFullName;
+    }
+
+    public TypeSyntax Source { get; set; }
+    public TypeSyntax Destination { get; set; }
+    public string SourceName { get; set; }
+    public string DestinationName { get; set; }
+    public string SourceFullName { get; set; }
+    public string DestinationFullName { get; set; }
 }
