@@ -38,7 +38,7 @@ public class MappingGenerator : IIncrementalGenerator
             ctx.AddSource("MapperBase.g.cs", SourceText.From(SourceGenerationHelper.Mapper, Encoding.UTF8));
         });
 
-        var enumDeclarations = context.SyntaxProvider
+        var declarations = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (s, _) => Filter.IsSyntaxTargetForGeneration(s),
                 transform: static (ctx, _) => Filter.GetSemanticTargetForGeneration(ctx))
@@ -46,7 +46,7 @@ public class MappingGenerator : IIncrementalGenerator
 
         // Combine the selected classes with the `Compilation`
         var compilationAndEnums
-            = context.CompilationProvider.Combine(enumDeclarations.Collect());
+            = context.CompilationProvider.Combine(declarations.Collect());
 
         // Generate the source using the compilation and classes
         context.RegisterSourceOutput(compilationAndEnums,
@@ -66,10 +66,15 @@ public class MappingGenerator : IIncrementalGenerator
             .Distinct()
             .ToArray();
 
+        var allMaps = new List<InvocationExpressionSyntax>();
         foreach (var classDeclarationSyntax in distinctClasses)
         {
-            context.AddSource("MapperImplementation", new SourceWriter(classDeclarationSyntax, compilation).GenerateSource());
+            if (Filter.TryFindMapsInvocations(classDeclarationSyntax, out var maps))
+            {
+                allMaps.AddRange(maps);
+            }
         }
+        context.AddSource("MapperImplementation", new SourceWriter(allMaps, compilation).GenerateSource());
     }
 
 
@@ -77,12 +82,12 @@ public class MappingGenerator : IIncrementalGenerator
 
 public class SourceWriter
 {
-    private readonly ClassDeclarationSyntax _classDeclarationSyntax;
+    private readonly MappingInfo[] _maps;
     private readonly Compilation _compilation;
 
-    public SourceWriter(ClassDeclarationSyntax classDeclarationSyntax, Compilation compilation)
+    public SourceWriter(IEnumerable<InvocationExpressionSyntax> maps, Compilation compilation)
     {
-        _classDeclarationSyntax = classDeclarationSyntax;
+        _maps = maps.Select(x => SyntaxHelper.GetMappingInfo(x, compilation)).ToArray();
         _compilation = compilation;
     }
 
@@ -94,7 +99,6 @@ public class SourceWriter
 
         return stringBuilder.ToString();
     }
-
 
     private void AddNamespace(StringBuilder builder, int indent)
     {
@@ -116,27 +120,13 @@ public class SourceWriter
     private void AddMethodsDeclaration(StringBuilder builder, int indent)
     {
         indent++;
-        if (!Filter.TryFindMapsInvocations(_classDeclarationSyntax, out var maps))
+        foreach (var map in _maps)
         {
-            builder.AppendLine("no maps were found.", indent);
-            return;
-        }
-
-        foreach (var map in maps)
-        {
-            var typeArguments = GetTypeArguments(map).ToArray();
-            var mappingInfo = new MappingInfo(
-                typeArguments[0],
-                typeArguments[1],
-                GetTypeSyntaxName(typeArguments[0]),
-                GetTypeSyntaxName(typeArguments[1]),
-                GetTypeSyntaxFullName(typeArguments[0]),
-                GetTypeSyntaxFullName(typeArguments[1]));
-
-            builder.AppendLine($"public {mappingInfo.DestinationFullName} {mappingInfo.SourceName}_To_{mappingInfo.DestinationName}({mappingInfo.SourceFullName} source)", indent);
+            builder.AppendLine($"public {map.DestinationFullName} {map.MappingName}({map.SourceFullName} source)", indent);
             builder.AppendLine("{", indent);
-            AddMethodBody(builder, mappingInfo, indent);
+            AddMethodBody(builder, map, indent);
             builder.AppendLine("}", indent);
+            builder.AppendLine();
         }
     }
 
@@ -152,55 +142,110 @@ public class SourceWriter
     private void AddClassInitializationBody(StringBuilder builder, MappingInfo mappingInfo, int indent)
     {
         indent++;
-        var sourceProperties = GetProperties(mappingInfo.Source);
-        var destinationProperties = GetProperties(mappingInfo.Destination);
+        var sourceProperties = SyntaxHelper.GetProperties(mappingInfo.Source, _compilation).ToArray();
+        var destinationProperties = SyntaxHelper.GetProperties(mappingInfo.Destination, _compilation).ToArray();
 
-        var simplePropertiesMatchingByName = GetMatchingProperties(
-            sourceProperties.Where(IsSimplePropertySymbol),
-            destinationProperties.Where(IsSimplePropertySymbol).ToArray());
+        var simplePropertiesMatchingByName = SyntaxHelper.GetSimpleMatchingProperties(
+            sourceProperties,
+            destinationProperties);
 
         foreach (var simpleProperty in simplePropertiesMatchingByName)
         {
-            builder.AppendLine($"{simpleProperty} = source.{simpleProperty},", indent);
+            builder.AppendLine($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},", indent);
+        }
+
+        var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
+            sourceProperties,
+            destinationProperties);
+
+        foreach (var complexProperty in complexPropertiesMatchingByName)
+        {
+            if (_maps.FirstOrDefault(x =>
+                    x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
+                    x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) is {} map)
+            {
+                builder.AppendLine($"{complexProperty.DestinationProperty.Name} = {map.MappingName}(source.{complexProperty.SourceProperty.Name})", indent);
+            }
+            else
+            {
+                builder.AppendLine($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined", indent);
+            }
         }
     }
-    private List<string> GetMatchingProperties(IEnumerable<IPropertySymbol> sourceProperties, IPropertySymbol[] destinationProperties)
-    {
-        var matchingProperties = new List<string>();
+}
 
-        foreach (var sourceProperty in sourceProperties)
+public static class SyntaxHelper
+{
+    public static MappingInfo GetMappingInfo(InvocationExpressionSyntax map, Compilation compilation)
+    {
+        var typeArguments = GetTypeArguments(map).ToArray();
+        var mappingInfo = new MappingInfo(
+            typeArguments[0],
+            typeArguments[1],
+            GetTypeSyntaxName(typeArguments[0]),
+            GetTypeSyntaxName(typeArguments[1]),
+            GetTypeSyntaxFullName(typeArguments[0], compilation),
+            GetTypeSyntaxFullName(typeArguments[1], compilation),
+            map);
+        return mappingInfo;
+    }
+
+    public static List<PropertyPair> GetSimpleMatchingProperties(IEnumerable<IPropertySymbol> sourceProperties,
+        IPropertySymbol[] destinationProperties)
+    {
+        var matchingProperties = new List<PropertyPair>();
+
+        foreach (var sourceProperty in sourceProperties.Where(IsSimplePropertySymbol))
         {
             var destinationProperty = destinationProperties.FirstOrDefault(p => p.Name == sourceProperty.Name);
 
             if (destinationProperty != null && sourceProperty.Type.Equals(destinationProperty.Type))
             {
-                matchingProperties.Add(destinationProperty.Name);
+                matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
+            }
+        }
+
+        return matchingProperties;
+    }
+    public static List<PropertyPair> GetComplexMatchingProperties(IEnumerable<IPropertySymbol> sourceProperties,
+        IEnumerable<IPropertySymbol> destinationProperties)
+    {
+        var matchingProperties = new List<PropertyPair>();
+        var complexDestinationProperties = destinationProperties.Where(symbol => !IsSimplePropertySymbol(symbol)).ToArray();
+
+        foreach (var sourceProperty in sourceProperties.Where(symbol => !IsSimplePropertySymbol(symbol)))
+        {
+            var destinationProperty = complexDestinationProperties.FirstOrDefault(p => p.Name == sourceProperty.Name);
+
+            if (destinationProperty != null)
+            {
+                matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
             }
         }
 
         return matchingProperties;
     }
 
-    private bool IsSimplePropertySymbol(IPropertySymbol property)
+    public static bool IsSimplePropertySymbol(IPropertySymbol property)
         => property.Type.TypeKind != TypeKind.Class || property.Type.SpecialType == SpecialType.System_String;
 
-    private IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax)
+    public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, Compilation compilation)
     {
-        var semanticModel = _compilation.GetSemanticModel(typeSyntax.SyntaxTree);
+        var semanticModel = compilation.GetSemanticModel(typeSyntax.SyntaxTree);
 
         return semanticModel.GetSymbolInfo(typeSyntax).Symbol is not INamedTypeSymbol typeSymbol
             ? Enumerable.Empty<IPropertySymbol>()
             : typeSymbol.GetMembers().OfType<IPropertySymbol>();
     }
 
-    private static string GetTypeSyntaxName(TypeSyntax typeSyntax)
+    public static string GetTypeSyntaxName(TypeSyntax typeSyntax)
         => (typeSyntax as IdentifierNameSyntax)?.Identifier.Text ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
 
-    private string GetTypeSyntaxFullName(ExpressionSyntax typeSyntax)
-        => _compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
+    public static string GetTypeSyntaxFullName(ExpressionSyntax typeSyntax, Compilation compilation)
+        => compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
            ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
 
-    private static SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
+    public static SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
     {
         if (map.Expression is GenericNameSyntax genericMethodName)
         {
@@ -233,10 +278,31 @@ public static class StringExtensions
         return span.ToString();
     }
 }
+public class PropertyPair
+{
+    public IPropertySymbol SourceProperty { get; set; }
+    public IPropertySymbol DestinationProperty { get; set; }
+
+    public PropertyPair(IPropertySymbol sourceProperty, IPropertySymbol destinationProperty)
+    {
+        SourceProperty = sourceProperty;
+        DestinationProperty = destinationProperty;
+    }
+}
 
 public class MappingInfo
 {
-    public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName, string sourceFullName, string destinationFullName)
+    public TypeSyntax Source { get; }
+    public TypeSyntax Destination { get; }
+    public string SourceName { get; }
+    public string DestinationName { get; }
+    public string SourceFullName { get; }
+    public string DestinationFullName { get; }
+    public InvocationExpressionSyntax InvocationExpressionSyntax { get; }
+    public string MappingName { get; }
+
+    public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
+        string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax)
     {
         Source = source;
         Destination = destination;
@@ -244,12 +310,7 @@ public class MappingInfo
         DestinationName = destinationName;
         SourceFullName = sourceFullName;
         DestinationFullName = destinationFullName;
+        InvocationExpressionSyntax = invocationExpressionSyntax;
+        MappingName = $"{SourceName}_To_{DestinationFullName.Replace(".", string.Empty)}";
     }
-
-    public TypeSyntax Source { get; set; }
-    public TypeSyntax Destination { get; set; }
-    public string SourceName { get; set; }
-    public string DestinationName { get; set; }
-    public string SourceFullName { get; set; }
-    public string DestinationFullName { get; set; }
 }

@@ -78,6 +78,7 @@ namespace somenamespace
         public PersonProfile()
         {
             Map<Person, PersonDto>();
+            Map<Address, AddressDto>();
         }
     }
 
