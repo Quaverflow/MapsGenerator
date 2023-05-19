@@ -22,7 +22,7 @@ namespace MapsGenerator
 {
     internal class MapsGeneratorOptions<TSource, TDestination>
     {
-        public void Exclude(Action<TDestination> destinationProperty)
+        public void Exclude<TProperty>(Func<TDestination, TProperty> destinationProperty)
         {
         }
 

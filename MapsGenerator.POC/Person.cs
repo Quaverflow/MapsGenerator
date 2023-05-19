@@ -32,7 +32,11 @@ internal class PersonProfile : MapperBase
 {
     public PersonProfile()
     {
-
+        Map<Person, PersonDto>(x =>
+        {
+            x.Exclude(y => y.LastName);
+        });
         Map<Address, AddressDto>();
+
     }
 }
