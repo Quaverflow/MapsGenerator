@@ -1,4 +1,4 @@
-﻿namespace MapsGenerator.POC;
+﻿namespace MapsGenerator.Benchmark.Models;
 
 public class Traits
 {

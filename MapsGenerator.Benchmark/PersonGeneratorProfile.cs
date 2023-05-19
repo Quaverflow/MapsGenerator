@@ -1,10 +1,10 @@
-﻿using MapsGenerator.POC.Models;
+﻿using MapsGenerator.Benchmark.Models;
 
-namespace MapsGenerator.POC;
+namespace MapsGenerator.Benchmark;
 
-internal class PersonProfile : MapperBase
+internal class PersonGeneratorProfile : MapperBase
 {
-    public PersonProfile()
+    public PersonGeneratorProfile()
     {
         Map<Person, PersonDto>(x =>
         { 
@@ -12,6 +12,5 @@ internal class PersonProfile : MapperBase
             x.MapFrom(d => d.Zodiac, s => s.Traits.Zodiac);
         });
         Map<Address, AddressDto>();
-
     }
 }

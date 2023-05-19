@@ -1,4 +1,4 @@
-﻿namespace MapsGenerator.POC;
+﻿namespace MapsGenerator.POC.Models;
 
 public class AddressDto
 {

@@ -1,11 +1,11 @@
-﻿namespace MapsGenerator.POC;
+﻿namespace MapsGenerator.Benchmark.Models;
 
-public class Person
+public class PersonDto
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public int Age { get; set; }
     public int Height { get; set; }
-    public Address Address { get; set; }
-    public Traits Traits { get; set; }
+    public string Zodiac { get; set; }
+    public AddressDto Address { get; set; }
 }

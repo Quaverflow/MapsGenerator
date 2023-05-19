@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MapsGenerator.Test", "MapsG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MapsGenerator.POC", "MapsGenerator.POC\MapsGenerator.POC.csproj", "{7A151A23-A049-4DC6-92E1-739D5E812968}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapsGenerator.POC.Tests", "MapsGenerator.POC.Tests\MapsGenerator.POC.Tests.csproj", "{24452E15-5F62-4CFC-A5AD-5DCAD7447357}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MapsGenerator.POC.Tests", "MapsGenerator.POC.Tests\MapsGenerator.POC.Tests.csproj", "{24452E15-5F62-4CFC-A5AD-5DCAD7447357}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapsGenerator.Benchmark", "MapsGenerator.Benchmark\MapsGenerator.Benchmark.csproj", "{C9C6BBC1-3359-408C-9528-7D6DA947F595}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{24452E15-5F62-4CFC-A5AD-5DCAD7447357}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24452E15-5F62-4CFC-A5AD-5DCAD7447357}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24452E15-5F62-4CFC-A5AD-5DCAD7447357}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9C6BBC1-3359-408C-9528-7D6DA947F595}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9C6BBC1-3359-408C-9528-7D6DA947F595}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9C6BBC1-3359-408C-9528-7D6DA947F595}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9C6BBC1-3359-408C-9528-7D6DA947F595}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

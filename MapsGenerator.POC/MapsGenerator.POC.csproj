@@ -7,6 +7,5 @@
   </PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\MapsGenerator\MapsGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-
 	</ItemGroup>
 </Project>
