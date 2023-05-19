@@ -75,6 +75,11 @@ public class SourceWriter
 
         foreach (var simpleProperty in simplePropertiesMatchingByName)
         {
+            if (mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name))
+            {
+                builder.AppendLine($"//{simpleProperty.DestinationProperty.Name} was manually excluded", indent);
+                continue;
+            }
             builder.AppendLine($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},", indent);
         }
 
@@ -84,6 +89,11 @@ public class SourceWriter
 
         foreach (var complexProperty in complexPropertiesMatchingByName)
         {
+            if (mappingInfo.ExcludedProperties.Any(x => x == complexProperty.DestinationProperty.Name))
+            {
+                builder.AppendLine($"//{complexProperty.DestinationProperty.Name} was manually excluded", indent);
+                continue;
+            }
             if (_maps.FirstOrDefault(x =>
                     x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
                     x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) is { } map)

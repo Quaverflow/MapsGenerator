@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Xml.Linq;
 
 namespace MapsGenerator;
 
@@ -62,19 +61,32 @@ public static class Filter
     }
 
     /// <summary>
-    /// Verify name and number of type parameters.
+    /// Verify name, parameters and number of type parameters.
     /// </summary>
     /// <param name="expressionSyntax"></param>
     /// <returns></returns>
     private static bool FilterMapInvocations(ExpressionSyntax? expressionSyntax)
-        => expressionSyntax is InvocationExpressionSyntax
-        {
-            Expression: GenericNameSyntax
+    {
+        if (expressionSyntax is InvocationExpressionSyntax
             {
-                Identifier.Text: "Map",
-                TypeArgumentList.Arguments.Count: 2
+                Expression: GenericNameSyntax
+                {
+                    Identifier: { Text: "Map" },
+                    TypeArgumentList.Arguments.Count: 2
+                }
+            } invocation)
+        {
+            var argCount = invocation.ArgumentList.Arguments.Count;
+
+            if (argCount is 0 or 1)
+            {
+                //todo should check the type parameter to ensure it's the correct kind.
+                return true;
             }
-        };
+        }
+
+        return false;
+    }
 
     private static ConstructorDeclarationSyntax? GetParameterlessConstructor(TypeDeclarationSyntax classDeclaration)
     => classDeclaration.Members

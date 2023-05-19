@@ -7,7 +7,7 @@ namespace MapsGenerator
         {
             return new somenamespace.PersonDto
             {
-                FirstName = source.FirstName,
+                //FirstName was manually excluded
                 LastName = source.LastName,
                 Age = source.Age,
                 Address = Address_To_somenamespaceAddressDto(source.Address)

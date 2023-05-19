@@ -77,7 +77,10 @@ namespace somenamespace
     {
         public PersonProfile()
         {
-            Map<Person, PersonDto>();
+            Map<Person, PersonDto>(options =>
+            {
+                options.Exclude(x => x.FirstName)
+            });
             Map<Address, AddressDto>();
         }
     }
