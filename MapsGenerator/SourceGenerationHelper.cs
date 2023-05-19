@@ -5,7 +5,7 @@ public static class SourceGenerationHelper
     public const string Mapper = @"
 namespace MapsGenerator
 {
-    internal abstract classDeclarationSyntax MapperBase
+    internal abstract class MapperBase
     {
         protected void Map<TSource, TDestination>()
         {

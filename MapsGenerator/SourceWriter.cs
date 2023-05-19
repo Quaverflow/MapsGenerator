@@ -35,7 +35,7 @@ public class SourceWriter
     private void AddClass(StringBuilder builder, int indent)
     {
         indent++;
-        builder.AppendLine("public classDeclarationSyntax MapperImplementation", indent);
+        builder.AppendLine("public class MapperImplementation", indent);
         builder.AppendLine("{", indent);
         AddMethodsDeclaration(builder, indent);
         builder.AppendLine("}", indent);
@@ -60,7 +60,7 @@ public class SourceWriter
         builder.AppendLine($"return new {mappingInfo.DestinationFullName}", indent);
         builder.AppendLine("{", indent);
         AddClassInitializationBody(builder, mappingInfo, indent);
-        builder.AppendLine("}", indent);
+        builder.AppendLine("};", indent);
     }
 
     private void AddClassInitializationBody(StringBuilder builder, MappingInfo mappingInfo, int indent)

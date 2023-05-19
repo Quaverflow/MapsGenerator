@@ -28,15 +28,11 @@ public class AddressDto
     public string City { get; set; }
 }
 
-[Mapper]
 internal class PersonProfile : MapperBase
 {
     public PersonProfile()
     {
-        Map<Person, PersonDto>(options =>
-        {
-            options.Exclude(x => x.FirstName)
-        });
+
         Map<Address, AddressDto>();
     }
 }
