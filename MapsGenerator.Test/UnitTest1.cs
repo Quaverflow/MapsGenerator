@@ -41,29 +41,6 @@ public static class ModuleInitializer
 [UsesVerify]
 public class UnitTest1
 {
-    //[Fact]
-    //public void Test1()
-    //{
-    //    var person = new Person
-    //    {
-    //        FirstName = "John",
-    //        LastName = "Doe",
-    //        Age = 30,
-    //        Address = new Address
-    //        {
-    //            Street = "123 Main St",
-    //            City = "New York"
-    //        }
-    //    };
-
-    //    PersonDto personDto = person.MapToPersonDto();
-
-    //    Assert.Equal("John", personDto.FirstName);
-    //    Assert.Equal("Doe", personDto.LastName);
-    //    Assert.Equal(30, personDto.Age);
-    //    Assert.Equal("123 Main St", personDto.Address.Street);
-    //    Assert.Equal("New York", personDto.Address.City);
-    //}
     [Fact]
     public Task GeneratesEnumExtensionsCorrectly()
     {
@@ -73,24 +50,15 @@ using MapsGenerator;
 
 namespace somenamespace
 {
-    internal class PersonProfile : MapperBase
-    {
-        public PersonProfile()
-        {
-            Map<Person, PersonDto>(options =>
-            {
-                options.Exclude(x => x.FirstName)
-            });
-            Map<Address, AddressDto>();
-        }
-    }
-
+   
 public class Person
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public int Age { get; set; }
+    public int Height { get; set; }
     public Address Address { get; set; }
+    public Traits Traits { get; set; }
 }
 
 public class Address
@@ -104,6 +72,8 @@ public class PersonDto
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public int Age { get; set; }
+    public int Height { get; set; }
+    public string Zodiac { get; set; }
     public AddressDto Address { get; set; }
 }
 
@@ -111,6 +81,26 @@ public class AddressDto
 {
     public string Street { get; set; }
     public string City { get; set; }
+}
+
+public class Traits
+{
+    public string Zodiac { get; set; }
+}
+
+
+internal class PersonProfile : MapperBase
+{
+    public PersonProfile()
+    {
+        Map<Person, PersonDto>(x =>
+        { 
+            x.Exclude(y => y.LastName);
+            x.MapFrom(d => d.Zodiac, s => s.Traits.Zodiac);
+        });
+        Map<Address, AddressDto>();
+
+    }
 }}
 ";
 

@@ -2,7 +2,7 @@
 
 namespace MapsGenerator
 {
-    internal abstract classDeclarationSyntax MapperBase
+    internal abstract class MapperBase
     {
         protected void Map<TSource, TDestination>()
         {

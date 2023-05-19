@@ -1,9 +1,9 @@
 namespace MapsGenerator.POC.Tests;
 
-public class UnitTest1
+public class MappingTests
 {
     [Fact]
-    public void Test1()
+    public void TestValidMapping()
     {
         var person = new Person
         {
@@ -14,15 +14,20 @@ public class UnitTest1
             {
                 Street = "adfawe",
                 City = "ffff"
+            },
+            Traits = new Traits
+            {
+                Zodiac = "sotk"
             }
         };
-        var mapper = new MapsGenerator.MapperImplementation();
+        var mapper = new MapperImplementation();
         var personDto = mapper.Person_To_MapsGeneratorPOCPersonDto(person);
 
         Assert.Equal(person.FirstName, personDto.FirstName);
         Assert.Equal(person.Address.City, personDto.Address.City);
         Assert.Equal(person.Address.Street, personDto.Address.Street);
         Assert.Equal(person.Age, personDto.Age);
+        Assert.Equal(person.Traits.Zodiac, personDto.Zodiac);
         Assert.Null(personDto.LastName);
     }
 }

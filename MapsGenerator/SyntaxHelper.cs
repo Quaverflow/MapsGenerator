@@ -37,6 +37,7 @@ public static class SyntaxHelper
 
         return matchingProperties;
     }
+
     public static List<PropertyPair> GetComplexMatchingProperties(IEnumerable<IPropertySymbol> sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties)
     {

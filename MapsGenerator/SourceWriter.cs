@@ -73,6 +73,10 @@ public class SourceWriter
             sourceProperties,
             destinationProperties);
 
+        var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
+            sourceProperties,
+            destinationProperties);
+
         foreach (var simpleProperty in simplePropertiesMatchingByName)
         {
             if (mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name))
@@ -80,12 +84,15 @@ public class SourceWriter
                 builder.AppendLine($"//{simpleProperty.DestinationProperty.Name} was manually excluded", indent);
                 continue;
             }
+
+            if (mappingInfo.MapFromProperties.FirstOrDefault(x =>
+                    x.Destination == simpleProperty.DestinationProperty.Name) is not null)
+            {
+                continue;
+            }
+
             builder.AppendLine($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},", indent);
         }
-
-        var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
-            sourceProperties,
-            destinationProperties);
 
         foreach (var complexProperty in complexPropertiesMatchingByName)
         {
@@ -94,16 +101,28 @@ public class SourceWriter
                 builder.AppendLine($"//{complexProperty.DestinationProperty.Name} was manually excluded", indent);
                 continue;
             }
+
+            if (mappingInfo.MapFromProperties.FirstOrDefault(x =>
+                    x.Destination == complexProperty.DestinationProperty.Name) is not null)
+            {
+                continue;
+            }
+
             if (_maps.FirstOrDefault(x =>
                     x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
                     x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) is { } map)
             {
-                builder.AppendLine($"{complexProperty.DestinationProperty.Name} = {map.MappingName}(source.{complexProperty.SourceProperty.Name})", indent);
+                builder.AppendLine($"{complexProperty.DestinationProperty.Name} = {map.MappingName}(source.{complexProperty.SourceProperty.Name}),", indent);
             }
             else
             {
                 builder.AppendLine($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined", indent);
             }
+        }
+
+        foreach (var customMap in mappingInfo.MapFromProperties)
+        {
+            builder.AppendLine($"{customMap.Destination} = source.{customMap.Source},", indent);
         }
     }
 }
