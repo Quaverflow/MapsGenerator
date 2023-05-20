@@ -13,7 +13,6 @@ public class MappingInfo
     public InvocationExpressionSyntax InvocationExpressionSyntax { get; }
     public List<string> ExcludedProperties { get; }
     public List<PropertyMapFromPair> MapFromProperties { get; }
-    public string MappingName { get; }
 
     public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
         string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax)
@@ -25,7 +24,6 @@ public class MappingInfo
         SourceFullName = sourceFullName;
         DestinationFullName = destinationFullName;
         InvocationExpressionSyntax = invocationExpressionSyntax;
-        MappingName = $"{SourceName}_To_{DestinationFullName.Replace(".", string.Empty)}";
         ExcludedProperties = GetExcludedProperties();
         MapFromProperties = GetMapFromProperties();
     }

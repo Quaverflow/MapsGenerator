@@ -23,7 +23,7 @@ public class MappingTests
             }
         };
         var mapper = new MapperImplementation();
-        var personDto = mapper.Person_To_MapsGeneratorPOCModelsPersonDto(person);
+        mapper.Map(person, out var personDto);
 
         Assert.Equal(person.FirstName, personDto.FirstName);
         Assert.Equal(person.Address.City, personDto.Address.City);

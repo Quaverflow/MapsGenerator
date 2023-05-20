@@ -13,4 +13,11 @@ public static class StringExtensions
 
         return span.ToString();
     }
+
+    public static string FirstCharToLower(this string input)
+    {
+        return string.IsNullOrEmpty(input) 
+            ? string.Empty 
+            : $"{char.ToLower(input[0])}{input.Substring(1)}";
+    }
 }

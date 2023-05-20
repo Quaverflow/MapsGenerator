@@ -3,22 +3,23 @@ namespace MapsGenerator
 {
     public class MapperImplementation
     {
-        public somenamespace.PersonDto Person_To_somenamespacePersonDto(somenamespace.Person source)
+        public void Map(somenamespace.Person source, out somenamespace.PersonDto destination)
         {
-            return new somenamespace.PersonDto
+            Map(source.Address, out var Address address);
+            destination = new somenamespace.PersonDto
             {
                 FirstName = source.FirstName,
-                //LastName was manually excluded
                 Age = source.Age,
                 Height = source.Height,
-                Address = Address_To_somenamespaceAddressDto(source.Address)
+                Address = address,
                 Zodiac = source.Traits.Zodiac,
+                //{simpleProperty.DestinationProperty.Name} was manually excluded
             };
         }
 
-        public somenamespace.AddressDto Address_To_somenamespaceAddressDto(somenamespace.Address source)
+        public void Map(somenamespace.Address source, out somenamespace.AddressDto destination)
         {
-            return new somenamespace.AddressDto
+            destination = new somenamespace.AddressDto
             {
                 Street = source.Street,
                 City = source.City,

@@ -37,7 +37,15 @@ public class MapperBenchmark
     [Benchmark]
     public PersonDto UsingMapGenerator()
     {
-        return _generatedMapper.Person_To_MapsGeneratorBenchmarkModelsPersonDto(_person);
+        _generatedMapper.Map(_person, out var result);
+        return result;
+    }
+
+    [Benchmark]
+    public PersonDto UsingTryMapGenerator()
+    {
+        _generatedMapper.TryMap(_person, out var result);
+        return result;
     }
 
     [Benchmark]
