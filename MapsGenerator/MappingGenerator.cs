@@ -46,19 +46,30 @@ public class MappingGenerator : IIncrementalGenerator
             .Distinct()
             .ToArray();
 
-        var allMaps = new List<InvocationExpressionSyntax>();
+        var profileDefinitions = new List<ProfileDefinition>();
         foreach (var classDeclarationSyntax in distinctClasses)
         {
             if (Filter.TryFindMapsInvocations(classDeclarationSyntax, out var maps))
             {
-                allMaps.AddRange(maps);
+                var mapsInfo = maps.Select(x => SyntaxHelper.GetMappingInfo(x, compilation)).ToArray();
+                profileDefinitions.Add(new ProfileDefinition(mapsInfo, classDeclarationSyntax));
             }
         }
 
-        var (contract, implementation) = new SourceWriter(allMaps, compilation).GenerateSource();
+        var (contract, implementation) = new SourceWriter(profileDefinitions, compilation).GenerateSource();
         context.AddSource("MapGenerator", implementation);
         context.AddSource("IMapGenerator", contract);
     }
+}
 
+public class ProfileDefinition
+{
+    public MappingInfo[] Maps { get; set; }
+    public ClassDeclarationSyntax Profile { get; set; }
 
+    public ProfileDefinition(MappingInfo[] maps, ClassDeclarationSyntax profile)
+    {
+        Maps = maps;
+        Profile = profile;
+    }
 }

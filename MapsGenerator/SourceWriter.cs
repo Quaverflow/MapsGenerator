@@ -6,16 +6,16 @@ namespace MapsGenerator;
 
 public class SourceWriter
 {
-    private readonly MappingInfo[] _maps;
+    private readonly List<ProfileDefinition> _profileDefinitions;
     private readonly Compilation _compilation;
-    private readonly List<string> _mapMethodsDefinitions = new();
-    public SourceWriter(IEnumerable<InvocationExpressionSyntax> maps, Compilation compilation)
+    private readonly List<MethodDefinition> _mapMethodsDefinitions = new();
+    public SourceWriter(List<ProfileDefinition> profileDefinitions, Compilation compilation)
     {
-        _maps = maps.Select(x => SyntaxHelper.GetMappingInfo(x, compilation)).ToArray();
+        _profileDefinitions = profileDefinitions;
         _compilation = compilation;
     }
 
-    public (string contract, string implementation)  GenerateSource()
+    public (string contract, string implementation) GenerateSource()
     {
         var implementationBuilder = new StringBuilder();
         AddNamespace(implementationBuilder, 0, AddClass);
@@ -42,7 +42,8 @@ public class SourceWriter
         indent++;
         foreach (var definition in _mapMethodsDefinitions)
         {
-            builder.AppendLine(definition, indent);
+            builder.AppendLine(definition.ProfileDocumentation, indent);
+            builder.AppendLine(definition.Name, indent);
         }
 
     }
@@ -67,23 +68,32 @@ public class SourceWriter
     private void AddClassMethodsDeclaration(StringBuilder builder, int indent)
     {
         indent++;
-        foreach (var map in _maps)
+        foreach (var definition in _profileDefinitions)
         {
-            var methodName = $"Map({map.SourceFullName} source, out {map.DestinationFullName} destination)";
-            _mapMethodsDefinitions.Add($"void {methodName};");
-            _mapMethodsDefinitions.Add($"bool Try{methodName};");
-            builder.AppendLine($"public void {methodName}", indent);
-            builder.AppendLine("{", indent);
-            AddMapAddMethodBody(builder, map, indent);
-            builder.AppendLine("}", indent);
-            builder.AppendLine();
+            foreach (var map in definition.Maps)
+            {
+                var methodName = $"Map({map.SourceFullName} source, out {map.DestinationFullName} destination)";
+                var profileName = SyntaxHelper.GetTypeSyntaxFullName(definition.Profile);
+                var profileDocumentation = @$"
+/// <summary>
+/// Profile <see cref=""{profileName}""/>
+/// </summary>";
 
-            builder.AppendLine($"public bool Try{methodName}", indent);
-            builder.AppendLine("{", indent);
-            AddTryMethodBody(builder, indent);
-            builder.AppendLine("}", indent);
-            builder.AppendLine();
+                _mapMethodsDefinitions.Add(new MethodDefinition($"void {methodName};", profileDocumentation));
+                _mapMethodsDefinitions.Add(new MethodDefinition($"bool Try{methodName};", profileDocumentation));
 
+                builder.AppendLine(profileDocumentation, indent);
+                builder.AppendLine($"public void {methodName}", indent);
+                builder.AppendLine("{", indent);
+                AddMapAddMethodBody(builder, map, definition, indent);
+                builder.AppendLine("}", indent);
+
+                builder.AppendLine(profileDocumentation, indent);
+                builder.AppendLine($"public bool Try{methodName}", indent);
+                builder.AppendLine("{", indent);
+                AddTryMethodBody(builder, indent);
+                builder.AppendLine("}", indent);
+            }
         }
     }
 
@@ -115,10 +125,11 @@ public class SourceWriter
         builder.AppendLine("return false;", indent);
     }
 
-    private void AddMapAddMethodBody(StringBuilder builder, MappingInfo mappingInfo, int indent)
+    private void AddMapAddMethodBody(StringBuilder builder, MappingInfo mappingInfo,
+        ProfileDefinition profileDefinition, int indent)
     {
         indent++;
-        var mappings = MappingProvider.GetMappings(mappingInfo, _maps, _compilation);
+        var mappings = MappingProvider.GetMappings(mappingInfo, profileDefinition.Maps, _compilation);
         foreach (var mapping in mappings.ComplexMappingInfo)
         {
             builder.AppendLine(mapping.Invocation, indent);
@@ -154,3 +165,17 @@ public class SourceWriter
         }
     }
 }
+
+
+public class MethodDefinition
+{
+    public string Name { get; }
+    public string ProfileDocumentation { get; }
+
+    public MethodDefinition(string name, string profileDocumentation)
+    {
+        Name = name;
+        ProfileDocumentation = profileDocumentation;
+    }
+}
+

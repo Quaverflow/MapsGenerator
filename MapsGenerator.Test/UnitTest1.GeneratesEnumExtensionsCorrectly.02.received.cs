@@ -3,6 +3,10 @@ namespace MapsGenerator
 {
     public class MapGenerator : IMapGenerator
     {
+        
+/// <summary>
+/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// </summary>
         public void Map(somenamespace.Person source, out somenamespace.PersonDto destination)
         {
             Map(source.Address, out var address);
@@ -17,6 +21,10 @@ namespace MapsGenerator
             };
         }
 
+        
+/// <summary>
+/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// </summary>
         public bool TryMap(somenamespace.Person source, out somenamespace.PersonDto destination)
         {
             try
@@ -31,6 +39,10 @@ namespace MapsGenerator
             }
         }
 
+        
+/// <summary>
+/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// </summary>
         public void Map(somenamespace.Address source, out somenamespace.AddressDto destination)
         {
             destination = new somenamespace.AddressDto
@@ -40,6 +52,10 @@ namespace MapsGenerator
             };
         }
 
+        
+/// <summary>
+/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// </summary>
         public bool TryMap(somenamespace.Address source, out somenamespace.AddressDto destination)
         {
             try

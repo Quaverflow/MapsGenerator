@@ -72,9 +72,19 @@ public static class SyntaxHelper
     public static string GetTypeSyntaxName(TypeSyntax typeSyntax)
         => (typeSyntax as IdentifierNameSyntax)?.Identifier.Text ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
 
-    public static string GetTypeSyntaxFullName(ExpressionSyntax typeSyntax, Compilation compilation)
+    public static string GetTypeSyntaxFullName(CSharpSyntaxNode typeSyntax, Compilation compilation)
         => compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
            ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
+
+    public static string GetTypeSyntaxFullName(ClassDeclarationSyntax classDeclarationSyntax)
+    {
+        var namespaceDeclaration = classDeclarationSyntax.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().First().Name.ToString();
+        var className = classDeclarationSyntax.Identifier.Text;
+        var qualifiedName = SyntaxFactory.QualifiedName(
+            SyntaxFactory.IdentifierName(namespaceDeclaration),
+            SyntaxFactory.IdentifierName(className));
+        return qualifiedName.ToString();
+    }
 
     public static SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
     {
