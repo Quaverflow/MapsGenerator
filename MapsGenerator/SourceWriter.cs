@@ -62,7 +62,7 @@ public class SourceWriter
         }
     }
 
-    private void AddTryMethodBody(StringBuilder builder, int indent)
+    private static void AddTryMethodBody(StringBuilder builder, int indent)
     {
         indent++;
         builder.AppendLine("try", indent);
@@ -70,20 +70,20 @@ public class SourceWriter
         AddTryBody(builder, indent);
         builder.AppendLine("}", indent);
         builder.AppendLine("catch", indent);
-        builder.AppendLine("{", indent); 
+        builder.AppendLine("{", indent);
         AddCatchBody(builder, indent);
         builder.AppendLine("}", indent);
 
     }
 
-    private void AddTryBody(StringBuilder builder, int indent)
+    private static void AddTryBody(StringBuilder builder, int indent)
     {
         indent++;
         builder.AppendLine($"Map(source, out destination);", indent);
         builder.AppendLine("return true;", indent);
     }
-    
-    private void AddCatchBody(StringBuilder builder, int indent)
+
+    private static void AddCatchBody(StringBuilder builder, int indent)
     {
         indent++;
         builder.AppendLine("destination = null;", indent);
@@ -93,7 +93,7 @@ public class SourceWriter
     private void AddMethodBody(StringBuilder builder, MappingInfo mappingInfo, int indent)
     {
         indent++;
-        var mappings = GetMappings(mappingInfo);
+        var mappings = MappingProvider.GetMappings(mappingInfo, _maps, _compilation);
         foreach (var mapping in mappings.ComplexMappingInfo)
         {
             builder.AppendLine(mapping.Invocation, indent);
@@ -105,102 +105,28 @@ public class SourceWriter
         builder.AppendLine("};", indent);
     }
 
-    private void AddClassInitializationBody(StringBuilder builder, Mappings mappings, int indent)
+    private static void AddClassInitializationBody(StringBuilder builder, Mappings mappings, int indent)
     {
         indent++;
         foreach (var matchingByName in mappings.MatchingByName)
         {
             builder.AppendLine(matchingByName, indent);
-        }   
-               
+        }
+
         foreach (var complexMappingInfo in mappings.ComplexMappingInfo)
         {
             builder.AppendLine($"{complexMappingInfo.Destination} = {complexMappingInfo.Variable},", indent);
-        }   
-                       
+        }
+
         foreach (var mapFrom in mappings.MapFrom)
         {
             builder.AppendLine(mapFrom, indent);
-        }   
-        
+        }
+
         foreach (var excludedProperty in mappings.Excluded)
         {
             builder.AppendLine(excludedProperty, indent);
         }
-    }
-
-    //todo remove duplication
-    private Mappings GetMappings(MappingInfo mappingInfo)
-    {
-        var sourceProperties = SyntaxHelper.GetProperties(mappingInfo.Source, _compilation).ToArray();
-        var destinationProperties = SyntaxHelper.GetProperties(mappingInfo.Destination, _compilation).ToArray();
-
-        var simplePropertiesMatchingByName = SyntaxHelper.GetSimpleMatchingProperties(
-            sourceProperties,
-            destinationProperties);
-
-        var mappings = new Mappings();
-
-        foreach (var simpleProperty in simplePropertiesMatchingByName)
-        {
-            if (mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name))
-            {
-                mappings.Excluded.Add("//{simpleProperty.DestinationProperty.Name} was manually excluded");
-                continue;
-            }
-
-            if (mappingInfo.MapFromProperties.FirstOrDefault(x =>
-                    x.Destination == simpleProperty.DestinationProperty.Name) is not null)
-            {
-                continue;
-            }
-
-            mappings.MatchingByName.Add($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},");
-        }
-
-
-        var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
-            sourceProperties,
-            destinationProperties);
-
-        foreach (var complexProperty in complexPropertiesMatchingByName)
-        {
-            if (mappingInfo.ExcludedProperties.Any(x => x == complexProperty.DestinationProperty.Name))
-            {
-                mappings.MapFrom.Add($"//{complexProperty.DestinationProperty.Name} was manually excluded");
-
-                continue;
-            }
-
-            if (mappingInfo.MapFromProperties.FirstOrDefault(x =>
-                    x.Destination == complexProperty.DestinationProperty.Name) is not null)
-            {
-                continue;
-            }
-
-            if (_maps.FirstOrDefault(x =>
-                    x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
-                    x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) is { } map)
-            {
-
-                var variable = complexProperty.DestinationProperty.Name.FirstCharToLower();
-                var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, out var {variable});";
-
-                //todo add a check for duplication
-                mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable, complexProperty.DestinationProperty.Name));
-            }
-            else
-            {
-                mappings.MatchingByName.Add($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined");
-            }
-        }
-
-        foreach (var customMap in mappingInfo.MapFromProperties)
-        {
-            mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
-        }
-
-        return mappings;
     }
 }
 
@@ -223,4 +149,95 @@ public class ComplexMappingInfo
         Variable = variable;
         Destination = destination;
     }
+}
+
+public static class MappingProvider
+{
+    public static Mappings GetMappings(MappingInfo mappingInfo, MappingInfo[] maps, Compilation compilation)
+    {
+        var mappings = new Mappings();
+        var sourceProperties = SyntaxHelper.GetProperties(mappingInfo.Source, compilation).ToArray();
+        var destinationProperties = SyntaxHelper.GetProperties(mappingInfo.Destination, compilation).ToArray();
+
+        AddSimpleProperties(mappingInfo, sourceProperties, destinationProperties, mappings);
+        AddComplexProperties(mappingInfo, maps, sourceProperties, destinationProperties, mappings);
+
+        foreach (var customMap in mappingInfo.MapFromProperties)
+        {
+            mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+        }
+
+        return mappings;
+    }
+
+    private static void AddComplexProperties(
+        MappingInfo mappingInfo, 
+        MappingInfo[] maps,
+        IEnumerable<IPropertySymbol> sourceProperties, 
+        IEnumerable<IPropertySymbol> destinationProperties, 
+        Mappings mappings)
+    {
+        var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
+            sourceProperties,
+            destinationProperties);
+
+        foreach (var complexProperty in complexPropertiesMatchingByName)
+        {
+            if (UseCommonMappings(mappingInfo, mappings, complexProperty))
+            {
+                continue;
+            }
+
+            if (maps.FirstOrDefault(x =>
+                    x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
+                    x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null)
+            {
+                var variable = complexProperty.DestinationProperty.Name.FirstCharToLower();
+                var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, out var {variable});";
+
+                //todo add a check for duplication
+                mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
+                    complexProperty.DestinationProperty.Name));
+                continue;
+            }
+
+            mappings.MatchingByName.Add($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined");
+        }
+    }
+
+    private static void AddSimpleProperties(MappingInfo mappingInfo, IEnumerable<IPropertySymbol> sourceProperties,
+        IPropertySymbol[] destinationProperties, Mappings mappings)
+    {
+        var simplePropertiesMatchingByName = SyntaxHelper.GetSimpleMatchingProperties(
+            sourceProperties,
+            destinationProperties);
+
+        foreach (var simpleProperty in simplePropertiesMatchingByName)
+        {
+            if (UseCommonMappings(mappingInfo, mappings, simpleProperty))
+            {
+                continue;
+            }
+
+            mappings.MatchingByName.Add($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},");
+        }
+    }
+
+    private static bool UseCommonMappings(MappingInfo mappingInfo, Mappings mappings, PropertyPair simpleProperty)
+    {
+        if (IsExcluded(mappingInfo, simpleProperty))
+        {
+            mappings.Excluded.Add($"//{simpleProperty.DestinationProperty.Name} was manually excluded");
+            return true;
+        }
+
+        return IsDefinedAsMapFrom(mappingInfo, simpleProperty);
+    }
+
+    private static bool IsDefinedAsMapFrom(MappingInfo mappingInfo, PropertyPair complexProperty)
+        => mappingInfo.MapFromProperties.FirstOrDefault(x =>
+            x.Destination == complexProperty.DestinationProperty.Name) is not null;
+
+    private static bool IsExcluded(MappingInfo mappingInfo, PropertyPair simpleProperty) 
+        => mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name);
 }
