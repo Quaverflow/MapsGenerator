@@ -1,8 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using MapsGenerator.DTOs;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace MapsGenerator;
+namespace MapsGenerator.Helpers;
 
 public static class SyntaxHelper
 {

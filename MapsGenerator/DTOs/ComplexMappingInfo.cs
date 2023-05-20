@@ -1,4 +1,4 @@
-﻿namespace MapsGenerator;
+﻿namespace MapsGenerator.DTOs;
 
 public class ComplexMappingInfo
 {

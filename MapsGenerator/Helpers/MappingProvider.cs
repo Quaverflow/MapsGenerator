@@ -1,6 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using MapsGenerator.DTOs;
+using Microsoft.CodeAnalysis;
 
-namespace MapsGenerator;
+namespace MapsGenerator.Helpers;
 
 public static class MappingProvider
 {
@@ -22,10 +23,10 @@ public static class MappingProvider
     }
 
     private static void AddComplexProperties(
-        MappingInfo mappingInfo, 
+        MappingInfo mappingInfo,
         MappingInfo[] maps,
-        IEnumerable<IPropertySymbol> sourceProperties, 
-        IEnumerable<IPropertySymbol> destinationProperties, 
+        IEnumerable<IPropertySymbol> sourceProperties,
+        IEnumerable<IPropertySymbol> destinationProperties,
         Mappings mappings)
     {
         var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
@@ -89,6 +90,6 @@ public static class MappingProvider
         => mappingInfo.MapFromProperties.FirstOrDefault(x =>
             x.Destination == complexProperty.DestinationProperty.Name) is not null;
 
-    private static bool IsExcluded(MappingInfo mappingInfo, PropertyPair simpleProperty) 
+    private static bool IsExcluded(MappingInfo mappingInfo, PropertyPair simpleProperty)
         => mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name);
 }

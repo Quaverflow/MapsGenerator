@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using MapsGenerator.DTOs;
+using MapsGenerator.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -48,7 +50,7 @@ public class SourceWriter
 
     }
 
-    private void AddNamespace(StringBuilder builder, int indent, Action<StringBuilder, int> addBody)
+    private static void AddNamespace(StringBuilder builder, int indent, Action<StringBuilder, int> addBody)
     {
         builder.AppendLine("namespace MapsGenerator", indent);
         builder.AppendLine("{", indent);
@@ -165,17 +167,3 @@ public class SourceWriter
         }
     }
 }
-
-
-public class MethodDefinition
-{
-    public string Name { get; }
-    public string ProfileDocumentation { get; }
-
-    public MethodDefinition(string name, string profileDocumentation)
-    {
-        Name = name;
-        ProfileDocumentation = profileDocumentation;
-    }
-}
-

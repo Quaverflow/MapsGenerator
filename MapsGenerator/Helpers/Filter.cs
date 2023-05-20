@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace MapsGenerator;
+namespace MapsGenerator.Helpers;
 
 public static class Filter
 {

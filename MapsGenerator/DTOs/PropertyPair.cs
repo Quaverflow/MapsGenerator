@@ -1,11 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace MapsGenerator;
+namespace MapsGenerator.DTOs;
 
 public class PropertyPair
 {
-    public IPropertySymbol SourceProperty { get; set; }
-    public IPropertySymbol DestinationProperty { get; set; }
+    public IPropertySymbol SourceProperty { get; }
+    public IPropertySymbol DestinationProperty { get; }
 
     public PropertyPair(IPropertySymbol sourceProperty, IPropertySymbol destinationProperty)
     {
