@@ -22,7 +22,7 @@ public class MappingTests
                 Zodiac = "sotk"
             }
         };
-        var mapper = new MapperImplementation();
+        var mapper = new MapGenerator();
         mapper.Map(person, out var personDto);
 
         Assert.Equal(person.FirstName, personDto.FirstName);

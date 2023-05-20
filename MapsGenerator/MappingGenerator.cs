@@ -54,7 +54,10 @@ public class MappingGenerator : IIncrementalGenerator
                 allMaps.AddRange(maps);
             }
         }
-        context.AddSource("MapperImplementation", new SourceWriter(allMaps, compilation).GenerateSource());
+
+        var (contract, implementation) = new SourceWriter(allMaps, compilation).GenerateSource();
+        context.AddSource("MapGenerator", implementation);
+        context.AddSource("IMapGenerator", contract);
     }
 
 

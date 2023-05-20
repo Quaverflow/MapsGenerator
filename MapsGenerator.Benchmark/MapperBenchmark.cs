@@ -10,7 +10,7 @@ public class MapperBenchmark
 {
     private readonly Person _person;
     private readonly IMapper _autoMapper;
-    private readonly MapperImplementation _generatedMapper;
+    private readonly MapGenerator _generatedMapper;
 
     public MapperBenchmark()
     {
@@ -31,7 +31,7 @@ public class MapperBenchmark
         };
 
         _autoMapper = new MapperConfiguration(x => x.AddProfile(new PersonProfile())).CreateMapper();
-        _generatedMapper = new MapperImplementation();
+        _generatedMapper = new MapGenerator();
     }
 
     [Benchmark]
