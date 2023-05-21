@@ -1,4 +1,4 @@
-﻿namespace MapsGenerator.Helpers;
+﻿namespace MapsGenerator;
 
 public static class SourceGenerationHelper
 {
@@ -27,7 +27,7 @@ namespace MapsGenerator
         }
 
         /// <summary>
-        /// For properties with mismatching names
+        /// For properties with mismatching names. Will attempt to match properties by name if it is a complex object
         /// </summary>
         /// <param name=""destinationProperty""></param>
         /// <param name=""sourceProperty""></param>
@@ -36,12 +36,10 @@ namespace MapsGenerator
         }   
         
         /// <summary>
-        /// Completely custom mapping. Will not attempt to match nested property if it's a complex object
+        /// Will add a parameter to the map method with the same name and type of the destination property,
         /// </summary>
-        /// <typeparam name=""T""></typeparam>
         /// <param name=""destinationProperty""></param>
-        /// <param name=""source""></param>
-        public void CustomMap<T>(Action<TDestination> destinationProperty, T source)
+        public void MapFromParameter<TProperty>(Func<TDestination, TProperty> destinationProperty)
         {
         }
     }

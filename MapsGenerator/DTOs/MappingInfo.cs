@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using MapsGenerator.Helpers;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator.DTOs;
 
@@ -13,9 +15,11 @@ public class MappingInfo
     public InvocationExpressionSyntax InvocationExpressionSyntax { get; }
     public List<string> ExcludedProperties { get; }
     public List<PropertyMapFromPair> MapFromProperties { get; }
+    public List<PropertyInfo> MapFromParameterProperties { get; }
 
     public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
-        string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax)
+        string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax,
+        Compilation compilation)
     {
         Source = source;
         Destination = destination;
@@ -26,6 +30,7 @@ public class MappingInfo
         InvocationExpressionSyntax = invocationExpressionSyntax;
         ExcludedProperties = GetExcludedProperties();
         MapFromProperties = GetMapFromProperties();
+        MapFromParameterProperties = GetMapFromParameterProperties(compilation);
     }
 
     private List<string> GetExcludedProperties()
@@ -115,6 +120,60 @@ public class MappingInfo
                 var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
 
                 mappedProperties.Add(new(sourceAccessName, destinationAccessName));
+            }
+        }
+
+        return mappedProperties;
+    }
+
+    private List<PropertyInfo> GetMapFromParameterProperties(Compilation compilation)
+    {
+        var mappedProperties = new List<PropertyInfo>();
+        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
+        {
+            return mappedProperties;
+        }
+
+        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
+        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax body })
+        {
+            return mappedProperties;
+        }
+
+        foreach (var statement in body.Statements)
+        {
+            if (statement is not ExpressionStatementSyntax
+                {
+                    Expression: InvocationExpressionSyntax
+                    {
+                        Expression: MemberAccessExpressionSyntax
+                        {
+                            Name.Identifier.Text: "MapFromParameter"
+                        },
+                        ArgumentList.Arguments.Count: 1
+                    } expression
+                })
+            {
+                continue;
+            }
+
+            if (expression.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
+                {
+                    Body: MemberAccessExpressionSyntax destinationPropertyAccess
+                })
+            {
+                var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+                var innerExpression = expression.ArgumentList.Arguments[0].Expression;
+                var syntaxTree = innerExpression.SyntaxTree;
+                var returnType = (compilation.GetSemanticModel(syntaxTree)
+                        .GetSymbolInfo(innerExpression).Symbol as IMethodSymbol)?.ReturnType
+                    .ToString();
+                if (returnType == null)
+                {
+                    throw new InvalidOperationException("Not a valid symbol");
+                }
+                //todo protect from variable name duplication
+                mappedProperties.Add(new PropertyInfo(destinationAccessName, returnType, destinationAccessName.FirstCharToLower()));
             }
         }
 

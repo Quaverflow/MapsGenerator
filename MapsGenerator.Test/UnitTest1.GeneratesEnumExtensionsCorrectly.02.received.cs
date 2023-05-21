@@ -5,7 +5,7 @@ namespace MapsGenerator
     {
         
 /// <summary>
-/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
         public void Map(somenamespace.Person source, out somenamespace.PersonDto destination)
         {
@@ -16,14 +16,13 @@ namespace MapsGenerator
                 Age = source.Age,
                 Height = source.Height,
                 Address = address,
-                Zodiac = source.Traits.Zodiac,
+                //FirstName - ?
                 //LastName was manually excluded
             };
         }
-
         
 /// <summary>
-/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
         public bool TryMap(somenamespace.Person source, out somenamespace.PersonDto destination)
         {
@@ -38,10 +37,9 @@ namespace MapsGenerator
                 return false;
             }
         }
-
         
 /// <summary>
-/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
         public void Map(somenamespace.Address source, out somenamespace.AddressDto destination)
         {
@@ -51,10 +49,9 @@ namespace MapsGenerator
                 City = source.City,
             };
         }
-
         
 /// <summary>
-/// Navigate to profileDocumentation <see cref="somenamespace.PersonProfile"/>
+/// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
         public bool TryMap(somenamespace.Address source, out somenamespace.AddressDto destination)
         {
@@ -69,6 +66,5 @@ namespace MapsGenerator
                 return false;
             }
         }
-
     }
 }

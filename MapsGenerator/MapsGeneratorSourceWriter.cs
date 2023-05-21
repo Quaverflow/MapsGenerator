@@ -6,12 +6,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator;
 
-public class SourceWriter
+public class MapsGeneratorSourceWriter
 {
     private readonly List<ProfileDefinition> _profileDefinitions;
     private readonly Compilation _compilation;
     private readonly List<MethodDefinition> _mapMethodsDefinitions = new();
-    public SourceWriter(List<ProfileDefinition> profileDefinitions, Compilation compilation)
+    public MapsGeneratorSourceWriter(List<ProfileDefinition> profileDefinitions, Compilation compilation)
     {
         _profileDefinitions = profileDefinitions;
         _compilation = compilation;
@@ -20,7 +20,7 @@ public class SourceWriter
     public (string contract, string implementation) GenerateSource()
     {
         var implementationBuilder = new StringBuilder();
-        AddNamespace(implementationBuilder, 0, AddClass);
+        AddNamespace(implementationBuilder, 0, AddMapGeneratorClass);
         var implementation = implementationBuilder.ToString();
 
         var contractBuilder = new StringBuilder();
@@ -58,7 +58,7 @@ public class SourceWriter
         builder.AppendLine("}", indent);
     }
 
-    private void AddClass(StringBuilder builder, int indent)
+    private void AddMapGeneratorClass(StringBuilder builder, int indent)
     {
         indent++;
         builder.AppendLine("public class MapGenerator : IMapGenerator", indent);
@@ -74,7 +74,10 @@ public class SourceWriter
         {
             foreach (var map in definition.Maps)
             {
-                var methodName = $"Map({map.SourceFullName} source, out {map.DestinationFullName} destination)";
+                var parameters = string.Join("", map.MapFromParameterProperties
+                    .Select(x => x.Type + " " + x.VariableName + ", "));
+
+                var methodName = $"Map({map.SourceFullName} source, {parameters}out {map.DestinationFullName} destination)";
                 var profileName = SyntaxHelper.GetTypeSyntaxFullName(definition.Profile);
                 var profileDocumentation = @$"
 /// <summary>
@@ -87,24 +90,24 @@ public class SourceWriter
                 builder.AppendLine(profileDocumentation, indent);
                 builder.AppendLine($"public void {methodName}", indent);
                 builder.AppendLine("{", indent);
-                AddMapAddMethodBody(builder, map, definition, indent);
+                AddMapMethodBody(builder, map, definition, indent);
                 builder.AppendLine("}", indent);
 
                 builder.AppendLine(profileDocumentation, indent);
                 builder.AppendLine($"public bool Try{methodName}", indent);
                 builder.AppendLine("{", indent);
-                AddTryMethodBody(builder, indent);
+                AddTryMethodBody(builder, map, indent);
                 builder.AppendLine("}", indent);
             }
         }
     }
 
-    private static void AddTryMethodBody(StringBuilder builder, int indent)
+    private static void AddTryMethodBody(StringBuilder builder, MappingInfo map, int indent)
     {
         indent++;
         builder.AppendLine("try", indent);
         builder.AppendLine("{", indent);
-        AddTryBody(builder, indent);
+        AddTryBody(builder, map, indent);
         builder.AppendLine("}", indent);
         builder.AppendLine("catch", indent);
         builder.AppendLine("{", indent);
@@ -113,10 +116,13 @@ public class SourceWriter
 
     }
 
-    private static void AddTryBody(StringBuilder builder, int indent)
+    private static void AddTryBody(StringBuilder builder, MappingInfo map, int indent)
     {
+        var parameters = string.Join("", map.MapFromParameterProperties
+            .Select(x => x.VariableName + ", "));
+
         indent++;
-        builder.AppendLine($"Map(source, out destination);", indent);
+        builder.AppendLine($"Map(source, {parameters}out destination);", indent);
         builder.AppendLine("return true;", indent);
     }
 
@@ -127,8 +133,7 @@ public class SourceWriter
         builder.AppendLine("return false;", indent);
     }
 
-    private void AddMapAddMethodBody(StringBuilder builder, MappingInfo mappingInfo,
-        ProfileDefinition profileDefinition, int indent)
+    private void AddMapMethodBody(StringBuilder builder, MappingInfo mappingInfo, ProfileDefinition profileDefinition, int indent)
     {
         indent++;
         var mappings = MappingProvider.GetMappings(mappingInfo, profileDefinition.Maps, _compilation);
@@ -157,6 +162,11 @@ public class SourceWriter
         }
 
         foreach (var mapFrom in mappings.MapFrom)
+        {
+            builder.AppendLine(mapFrom, indent);
+        }
+
+        foreach (var mapFrom in mappings.MapFromParameter)
         {
             builder.AppendLine(mapFrom, indent);
         }

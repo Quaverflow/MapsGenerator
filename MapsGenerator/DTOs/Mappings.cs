@@ -5,5 +5,6 @@ public class Mappings
     public List<string> MatchingByName { get; } = new();
     public List<string> MapFrom { get; } = new();
     public List<string> Excluded { get; } = new();
+    public List<string> MapFromParameter { get; } = new();
     public List<ComplexMappingInfo> ComplexMappingInfo { get; } = new();
 }

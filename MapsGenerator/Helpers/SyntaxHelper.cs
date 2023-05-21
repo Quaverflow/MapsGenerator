@@ -17,7 +17,8 @@ public static class SyntaxHelper
             GetTypeSyntaxName(typeArguments[1]),
             GetTypeSyntaxFullName(typeArguments[0], compilation),
             GetTypeSyntaxFullName(typeArguments[1], compilation),
-            map);
+            map,
+            compilation);
         return mappingInfo;
     }
 
@@ -80,12 +81,24 @@ public static class SyntaxHelper
     public static string GetTypeSyntaxFullName(ClassDeclarationSyntax classDeclarationSyntax)
     {
         var namespaceDeclaration = classDeclarationSyntax.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().First().Name.ToString();
-        var className = classDeclarationSyntax.Identifier.Text;
+        var className = classDeclarationSyntax.Identifier.ValueText;
         var qualifiedName = SyntaxFactory.QualifiedName(
             SyntaxFactory.IdentifierName(namespaceDeclaration),
             SyntaxFactory.IdentifierName(className));
         return qualifiedName.ToString();
     }
+
+        public static string GetTypeSyntaxFullName2(MemberAccessExpressionSyntax memberAccessExpressionSyntax, Compilation compilation)
+        {
+            var semanticModel = compilation.GetSemanticModel(memberAccessExpressionSyntax.SyntaxTree);
+            var symbol = semanticModel.GetSymbolInfo(memberAccessExpressionSyntax).Symbol;
+            if (symbol is IPropertySymbol propertySymbol)
+            {
+                return propertySymbol.Type.ToString();
+            }
+
+            throw new InvalidOperationException("not a property");
+        }
 
     public static SeparatedSyntaxList<TypeSyntax> GetTypeArguments(InvocationExpressionSyntax map)
     {

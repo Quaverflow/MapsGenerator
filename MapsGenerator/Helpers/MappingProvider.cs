@@ -83,13 +83,19 @@ public static class MappingProvider
             return true;
         }
 
+        if (mappingInfo.MapFromParameterProperties.FirstOrDefault(
+                x => x.Name == simpleProperty.DestinationProperty.Name) is {} property)
+        {
+            mappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
+            return true;
+        }
         return IsDefinedAsMapFrom(mappingInfo, simpleProperty);
     }
 
     private static bool IsDefinedAsMapFrom(MappingInfo mappingInfo, PropertyPair complexProperty)
         => mappingInfo.MapFromProperties.FirstOrDefault(x =>
             x.Destination == complexProperty.DestinationProperty.Name) is not null;
-
+    
     private static bool IsExcluded(MappingInfo mappingInfo, PropertyPair simpleProperty)
         => mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name);
 }
