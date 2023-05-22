@@ -172,8 +172,15 @@ public class MappingInfo
                 {
                     throw new InvalidOperationException("Not a valid symbol");
                 }
-                //todo protect from variable name duplication
-                mappedProperties.Add(new PropertyInfo(destinationAccessName, returnType, destinationAccessName.FirstCharToLower()));
+
+                var variableName = destinationAccessName.Replace(".", string.Empty).FirstCharToLower();
+                var nestedPropertyQueue = new Queue<string>();
+                foreach (var item in destinationAccessName.Split('.'))
+                {
+                    nestedPropertyQueue.Enqueue(item);
+                }
+
+                mappedProperties.Add(new PropertyInfo(destinationAccessName, returnType, variableName, nestedPropertyQueue));
             }
         }
 

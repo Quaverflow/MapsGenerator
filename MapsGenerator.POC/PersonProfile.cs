@@ -11,6 +11,7 @@ internal class PersonProfile : MapperBase
             x.Exclude(y => y.LastName); 
             x.MapFrom(d => d.Zodiac, s => s.Traits.Zodiac);
             x.MapFromParameter(d => d.FirstName);
+            x.MapFromParameter(d => d.Address.City);
         });
         Map<Address, AddressDto>();
 

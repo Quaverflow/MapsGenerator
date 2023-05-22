@@ -23,10 +23,10 @@ public class MappingTests
             }
         };
         var mapper = new MapGenerator();
-        mapper.Map(person, "John", out var personDto);
+        mapper.Map(person, "John", "London", out var personDto);
 
         Assert.Equal("John", personDto.FirstName);
-        Assert.Equal(person.Address.City, personDto.Address.City);
+        Assert.Equal("London", personDto.Address.City);
         Assert.Equal(person.Address.Street, personDto.Address.Street);
         Assert.Equal(person.Age, personDto.Age);
         Assert.Equal(person.Traits.Zodiac, personDto.Zodiac);

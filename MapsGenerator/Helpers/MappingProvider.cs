@@ -1,4 +1,5 @@
-﻿using MapsGenerator.DTOs;
+﻿using System.Text;
+using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis;
 
 namespace MapsGenerator.Helpers;
@@ -44,8 +45,21 @@ public static class MappingProvider
                     x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
                     x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null)
             {
-                var variable = complexProperty.DestinationProperty.Name.FirstCharToLower();
-                var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, out var {variable});";
+                //if (mappingInfo.MapFromParameterProperties
+                //    .FirstOrDefault(x => x.Name == complexProperty.DestinationProperty.Name)
+                //    is {} m)
+
+                var parametersBuilder = new StringBuilder();
+                var complexPropertyName = complexProperty.DestinationProperty.Name;
+                foreach (var mappedParameter in mappingInfo.MapFromParameterProperties.Where(x =>
+                             x.NestedPropertyInvocationQueue.Peek() == complexPropertyName))
+                {
+                    mappedParameter.NestedPropertyInvocationQueue.Dequeue();
+                    parametersBuilder.Append($"{mappedParameter.VariableName}, ");
+                }
+
+                var variable = complexPropertyName.FirstCharToLower();
+                var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
 
                 //todo add a check for duplication
                 mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
@@ -84,7 +98,7 @@ public static class MappingProvider
         }
 
         if (mappingInfo.MapFromParameterProperties.FirstOrDefault(
-                x => x.Name == simpleProperty.DestinationProperty.Name) is {} property)
+                  x => x.Name == simpleProperty.DestinationProperty.Name) is {} property)
         {
             mappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
             return true;

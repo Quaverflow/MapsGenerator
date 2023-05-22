@@ -47,7 +47,6 @@ public class MapsGeneratorSourceWriter
             builder.AppendLine(definition.ProfileDocumentation, indent);
             builder.AppendLine(definition.Name, indent);
         }
-
     }
 
     private static void AddNamespace(StringBuilder builder, int indent, Action<StringBuilder, int> addBody)
@@ -63,44 +62,86 @@ public class MapsGeneratorSourceWriter
         indent++;
         builder.AppendLine("public class MapGenerator : IMapGenerator", indent);
         builder.AppendLine("{", indent);
-        AddClassMethodsDeclaration(builder, indent);
-        builder.AppendLine("}", indent);
-    }
-
-    private void AddClassMethodsDeclaration(StringBuilder builder, int indent)
-    {
-        indent++;
         foreach (var definition in _profileDefinitions)
         {
             foreach (var map in definition.Maps)
             {
-                var parameters = string.Join("", map.MapFromParameterProperties
-                    .Select(x => x.Type + " " + x.VariableName + ", "));
+                AddClassMethodsDeclaration(builder, definition, map, indent);
+            }
+        }
 
-                var methodName = $"Map({map.SourceFullName} source, {parameters}out {map.DestinationFullName} destination)";
-                var profileName = SyntaxHelper.GetTypeSyntaxFullName(definition.Profile);
-                var profileDocumentation = @$"
+        builder.AppendLine("}", indent);
+    }
+
+    private void AddClassMethodsDeclaration(StringBuilder builder, ProfileDefinition definition, MappingInfo map,
+        int indent)
+    {
+        indent++;
+
+        var methodNames = BuildMethodNames(map);
+        var profileDocumentation = BuildDocumentation(definition);
+
+        foreach (var methodDeclaration in methodNames)
+        {
+            _mapMethodsDefinitions.Add(new MethodDefinition($"void {methodDeclaration};", profileDocumentation));
+            _mapMethodsDefinitions.Add(new MethodDefinition($"bool Try{methodDeclaration};", profileDocumentation));
+
+            builder.AppendLine(profileDocumentation, indent);
+            builder.AppendLine($"public void {methodDeclaration}", indent);
+            builder.AppendLine("{", indent);
+            AddMapMethodBody(builder, map, definition, indent);
+            builder.AppendLine("}", indent);
+
+            builder.AppendLine(profileDocumentation, indent);
+            builder.AppendLine($"public bool Try{methodDeclaration}", indent);
+            builder.AppendLine("{", indent);
+            AddTryMethodBody(builder, map, indent);
+            builder.AppendLine("}", indent);
+        }
+    }
+
+    private static IEnumerable<string> BuildMethodNames(MappingInfo map)
+    {
+        var parameters = BuildMapParameters(map);
+        var methodDeclarations = new List<string>();
+
+        //todo this will not work because it checks the queue on the nested property rather than the parent. to map correctly it's probably worth creating a top level structure of the mappings
+        //var parametersBuilder = new StringBuilder();
+        //var propertyName = map.DestinationName;
+        //foreach (var mappedParameter in map.MapFromParameterProperties.Where(x =>
+        //             x.NestedPropertyDefinitionQueue.Peek() == propertyName))
+        //{
+        //    mappedParameter.NestedPropertyDefinitionQueue.Dequeue();
+        //    parametersBuilder.Append($"{mappedParameter.VariableName}, ");
+        //}
+
+        //var nestedPropertyParameters = parametersBuilder.ToString();
+
+        //if (!string.IsNullOrWhiteSpace(nestedPropertyParameters))
+        //{
+        //    var methodNameWithComplexParameters = $"Map({map.SourceFullName} source, {parameters}{nestedPropertyParameters}out {map.DestinationFullName} destination)";
+        //    methodDeclarations.Add(methodNameWithComplexParameters);
+        //}
+
+        var methodName = $"Map({map.SourceFullName} source, {parameters}out {map.DestinationFullName} destination)";
+        methodDeclarations.Add(methodName);
+
+        return methodDeclarations;
+    }
+
+    private static string BuildDocumentation(ProfileDefinition definition)
+    {
+        var profileName = SyntaxHelper.GetTypeSyntaxFullName(definition.Profile);
+        var profileDocumentation = @$"
 /// <summary>
 /// Profile <see cref=""{profileName}""/>
 /// </summary>";
-
-                _mapMethodsDefinitions.Add(new MethodDefinition($"void {methodName};", profileDocumentation));
-                _mapMethodsDefinitions.Add(new MethodDefinition($"bool Try{methodName};", profileDocumentation));
-
-                builder.AppendLine(profileDocumentation, indent);
-                builder.AppendLine($"public void {methodName}", indent);
-                builder.AppendLine("{", indent);
-                AddMapMethodBody(builder, map, definition, indent);
-                builder.AppendLine("}", indent);
-
-                builder.AppendLine(profileDocumentation, indent);
-                builder.AppendLine($"public bool Try{methodName}", indent);
-                builder.AppendLine("{", indent);
-                AddTryMethodBody(builder, map, indent);
-                builder.AppendLine("}", indent);
-            }
-        }
+        return profileDocumentation;
     }
+
+    private static string BuildMapParameters(MappingInfo map) =>
+        string.Join("", map.MapFromParameterProperties
+            .Select(x => $"{x.Type} {x.VariableName}, "));
 
     private static void AddTryMethodBody(StringBuilder builder, MappingInfo map, int indent)
     {

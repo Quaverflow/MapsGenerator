@@ -7,16 +7,15 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public void Map(somenamespace.Person source, out somenamespace.PersonDto destination)
+        public void Map(somenamespace.Person source, ? addressCity, out somenamespace.PersonDto destination)
         {
-            Map(source.Address, out var address);
+            Map(source.Address, addressCity, out var address);
             destination = new somenamespace.PersonDto
             {
                 FirstName = source.FirstName,
                 Age = source.Age,
                 Height = source.Height,
                 Address = address,
-                //FirstName - ?
                 //LastName was manually excluded
             };
         }
@@ -24,11 +23,11 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Person source, out somenamespace.PersonDto destination)
+        public bool TryMap(somenamespace.Person source, ? addressCity, out somenamespace.PersonDto destination)
         {
             try
             {
-                Map(source, out destination);
+                Map(source, addressCity, out destination);
                 return true;
             }
             catch
