@@ -7,7 +7,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public void Map(somenamespace.Person source, ? addressCity, out somenamespace.PersonDto destination)
+        public void Map(? addressCity,  out somenamespace.PersonDto)
         {
             Map(source.Address, addressCity, out var address);
             destination = new somenamespace.PersonDto
@@ -24,16 +24,17 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Person source, ? addressCity, out somenamespace.PersonDto destination)
+        public bool Map(? addressCity, , out somenamespace.PersonDto, Action<Exception>? onError = null)
         {
             try
             {
                 Map(source, addressCity, out destination);
                 return true;
             }
-            catch
+            catch(Exception e)
             {
                 destination = null;
+                if(onError != null) { onError(e); }
                 return false;
             }
         }
@@ -41,7 +42,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public void Map(somenamespace.Address source, out somenamespace.AddressDto destination)
+        public void Map( out somenamespace.AddressDto)
         {
             destination = new somenamespace.AddressDto
             {
@@ -53,16 +54,17 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Address source, out somenamespace.AddressDto destination)
+        public bool Map(, out somenamespace.AddressDto, Action<Exception>? onError = null)
         {
             try
             {
                 Map(source, out destination);
                 return true;
             }
-            catch
+            catch(Exception e)
             {
                 destination = null;
+                if(onError != null) { onError(e); }
                 return false;
             }
         }

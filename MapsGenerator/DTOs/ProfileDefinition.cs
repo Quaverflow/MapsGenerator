@@ -1,7 +1,6 @@
-﻿using MapsGenerator.DTOs;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace MapsGenerator;
+namespace MapsGenerator.DTOs;
 
 public class ProfileDefinition
 {
