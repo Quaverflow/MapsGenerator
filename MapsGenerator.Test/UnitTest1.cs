@@ -63,7 +63,7 @@ internal class PersonProfile : MapperBase
             x.EnsureAllDestinationPropertiesAreMapped();
             
         });
-        Map<Address, AddressDto>();
+        //Map<Address, AddressDto>();
 
     }
 }}

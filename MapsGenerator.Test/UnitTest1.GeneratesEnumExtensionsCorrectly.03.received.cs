@@ -7,21 +7,11 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        void Map(? addressCity,  out somenamespace.PersonDto)
+        void Map(? addressCity,  out somenamespace.PersonDto destination)
         
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        bool Map(? addressCity, , out somenamespace.PersonDto, Action<Exception>? onError = null);
-        
-/// <summary>
-/// Profile <see cref="somenamespace.PersonProfile"/>
-/// </summary>
-        void Map( out somenamespace.AddressDto)
-        
-/// <summary>
-/// Profile <see cref="somenamespace.PersonProfile"/>
-/// </summary>
-        bool Map(, out somenamespace.AddressDto, Action<Exception>? onError = null);
+        bool Map(? addressCity, , out somenamespace.PersonDto destination, Action<Exception>? onError = null);
     }
 }

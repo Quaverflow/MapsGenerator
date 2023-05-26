@@ -68,7 +68,7 @@ public static class MappingProvider
                 continue;
             }
 
-            context.Mappings.MatchingByName.Add($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined");
+            context.NotMappedProperties.Add(complexProperty.DestinationProperty);
         }
     }
 
