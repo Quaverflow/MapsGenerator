@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
-using MapsGenerator.DTOs;
 using MapsGenerator.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -61,17 +60,5 @@ public class MappingGenerator : IIncrementalGenerator
         var (contract, implementation) = new MapsGeneratorSourceWriter(new SourceWriterContext(profileDefinitions, compilation)).GenerateSource();
         context.AddSource("MapGenerator", implementation);
         context.AddSource("IMapGenerator", contract);
-    }
-}
-
-public class ProfileDefinition
-{
-    public MappingInfo[] Maps { get; set; }
-    public ClassDeclarationSyntax Profile { get; set; }
-
-    public ProfileDefinition(MappingInfo[] maps, ClassDeclarationSyntax profile)
-    {
-        Maps = maps;
-        Profile = profile;
     }
 }
