@@ -113,8 +113,8 @@ public class MapsGeneratorSourceWriter
     }
 
     private static string BuildMapParameters(MappingInfo map) =>
-        string.Join("", map.MapFromParameterProperties
-            .Select(x => $"{x.Type} {x.VariableName}, "));
+        $"{map.SourceFullName} {map.SourceName.FirstCharToLower()}, {string.Join("", map.MapFromParameterProperties
+            .Select(x => $"{x.Type} {x.VariableName}, "))}";
 
     private void AddTryMethodBody(StringBuilder builder, int indent)
     {

@@ -7,7 +7,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public void Map(? addressCity,  out somenamespace.PersonDto destination)
+        public void Map(somenamespace.Person person, ? addressCity,  out somenamespace.PersonDto destination)
         {
             destination = new somenamespace.PersonDto
             {
@@ -23,7 +23,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        public bool Map(? addressCity, , out somenamespace.PersonDto destination, Action<Exception>? onError = null)
+        public bool Map(somenamespace.Person person, ? addressCity, , out somenamespace.PersonDto destination, Action<Exception>? onError = null)
         {
             try
             {
