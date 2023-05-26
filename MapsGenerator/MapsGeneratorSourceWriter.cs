@@ -84,7 +84,7 @@ public class MapsGeneratorSourceWriter
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
 
         var mapDeclaration = $"void Map({profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
-        var tryMapDeclaration = $"bool Map({profileMethodsInfo.Parameters}, out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
+        var tryMapDeclaration = $"bool TryMap({profileMethodsInfo.Parameters}, out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration}", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
