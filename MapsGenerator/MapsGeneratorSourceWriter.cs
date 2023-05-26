@@ -82,9 +82,9 @@ public class MapsGeneratorSourceWriter
             BuildDocumentation(_context.CurrentProfile));
 
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
-
-        var mapDeclaration = $"void Map({profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
-        var tryMapDeclaration = $"bool TryMap({profileMethodsInfo.Parameters}, out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
+        var source = $"{_context.CurrentMap.SourceFullName} {_context.CurrentMap.SourceName.FirstCharToLower()}";
+        var mapDeclaration = $"void Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
+        var tryMapDeclaration = $"bool Map({source}, {profileMethodsInfo.Parameters}, out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration}", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
@@ -113,8 +113,8 @@ public class MapsGeneratorSourceWriter
     }
 
     private static string BuildMapParameters(MappingInfo map) =>
-        $"{map.SourceFullName} {map.SourceName.FirstCharToLower()}, {string.Join("", map.MapFromParameterProperties
-            .Select(x => $"{x.Type} {x.VariableName}, "))}";
+        string.Join("", map.MapFromParameterProperties
+            .Select(x => $"{x.Type} {x.VariableName}, "));
 
     private void AddTryMethodBody(StringBuilder builder, int indent)
     {
