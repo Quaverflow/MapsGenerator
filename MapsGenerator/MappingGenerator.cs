@@ -58,7 +58,7 @@ public class MappingGenerator : IIncrementalGenerator
             }
         }
 
-        var (contract, implementation) = new MapsGeneratorSourceWriter(profileDefinitions, compilation).GenerateSource();
+        var (contract, implementation) = new MapsGeneratorSourceWriter(new SourceWriterContext(profileDefinitions, compilation)).GenerateSource();
         context.AddSource("MapGenerator", implementation);
         context.AddSource("IMapGenerator", contract);
     }

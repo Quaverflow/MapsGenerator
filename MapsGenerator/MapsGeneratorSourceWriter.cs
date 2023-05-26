@@ -6,15 +6,52 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator;
 
+public class SourceWriterContext
+{
+    public List<ProfileDefinition> ProfileDefinitions { get; }
+    public Compilation Compilation { get; }
+    public List<MethodDefinition> MapMethodsDefinitions { get; } = new();
+    public List<ProfileMethodsInfo> ProfileMethodsInfo { get; } = new();
+    public List<IPropertySymbol> NotMappedProperties { get; } = new();
+
+    public ProfileDefinition CurrentProfile { get; set; } = null!;
+    public MappingInfo CurrentMap { get; set; } = null!;
+    public Mappings Mappings { get; } = new();
+
+    public SourceWriterContext(List<ProfileDefinition> profileDefinitions, Compilation compilation)
+    {
+        ProfileDefinitions = profileDefinitions;
+        Compilation = compilation;
+    }
+
+    public void Reset()
+    {
+        Mappings.Reset();
+        NotMappedProperties.Clear();
+        CurrentMap = null!;
+        CurrentProfile = null!;
+    }
+}
+
+public class ProfileMethodsInfo
+{
+    public ProfileMethodsInfo(string[] methodNames, string documentation)
+    {
+        MethodNames = methodNames;
+        Documentation = documentation;
+    }
+
+    public string[] MethodNames { get; }
+    public string Documentation { get; }
+}
+
 public class MapsGeneratorSourceWriter
 {
-    private readonly List<ProfileDefinition> _profileDefinitions;
-    private readonly Compilation _compilation;
-    private readonly List<MethodDefinition> _mapMethodsDefinitions = new();
-    public MapsGeneratorSourceWriter(List<ProfileDefinition> profileDefinitions, Compilation compilation)
+    private readonly SourceWriterContext _context;
+
+    public MapsGeneratorSourceWriter(SourceWriterContext context)
     {
-        _profileDefinitions = profileDefinitions;
-        _compilation = compilation;
+        _context = context;
     }
 
     public (string contract, string implementation) GenerateSource()
@@ -42,7 +79,7 @@ public class MapsGeneratorSourceWriter
     private void AddInterfaceMethodsDeclaration(StringBuilder builder, int indent)
     {
         indent++;
-        foreach (var definition in _mapMethodsDefinitions)
+        foreach (var definition in _context.MapMethodsDefinitions)
         {
             builder.AppendLine(definition.ProfileDocumentation, indent);
             builder.AppendLine(definition.Name, indent);
@@ -62,40 +99,45 @@ public class MapsGeneratorSourceWriter
         indent++;
         builder.AppendLine("public class MapGenerator : IMapGenerator", indent);
         builder.AppendLine("{", indent);
-        foreach (var definition in _profileDefinitions)
+        foreach (var currentProfile in _context.ProfileDefinitions)
         {
-            foreach (var map in definition.Maps)
+            foreach (var currentMap in currentProfile.Maps)
             {
-                AddClassMethodsDeclaration(builder, definition, map, indent);
+                _context.Reset();
+                _context.CurrentProfile = currentProfile;
+                _context.CurrentMap = currentMap;
+                AddClassMethodsDeclaration(builder, indent);
             }
         }
 
         builder.AppendLine("}", indent);
     }
 
-    private void AddClassMethodsDeclaration(StringBuilder builder, ProfileDefinition definition, MappingInfo map,
-        int indent)
+    private void AddClassMethodsDeclaration(StringBuilder builder, int indent)
     {
         indent++;
+         
+        var profileMethodsInfo = new ProfileMethodsInfo(
+            BuildMethodNames(_context.CurrentMap).ToArray(),
+            BuildDocumentation(_context.CurrentProfile));
 
-        var methodNames = BuildMethodNames(map);
-        var profileDocumentation = BuildDocumentation(definition);
+        _context.ProfileMethodsInfo.Add(profileMethodsInfo);
 
-        foreach (var methodDeclaration in methodNames)
+        foreach (var methodDeclaration in profileMethodsInfo.MethodNames)
         {
-            _mapMethodsDefinitions.Add(new MethodDefinition($"void {methodDeclaration};", profileDocumentation));
-            _mapMethodsDefinitions.Add(new MethodDefinition($"bool Try{methodDeclaration};", profileDocumentation));
+            _context.MapMethodsDefinitions.Add(new MethodDefinition($"void {methodDeclaration};", profileMethodsInfo.Documentation));
+            _context.MapMethodsDefinitions.Add(new MethodDefinition($"bool Try{methodDeclaration};", profileMethodsInfo.Documentation));
 
-            builder.AppendLine(profileDocumentation, indent);
+            builder.AppendLine(profileMethodsInfo.Documentation, indent);
             builder.AppendLine($"public void {methodDeclaration}", indent);
             builder.AppendLine("{", indent);
-            AddMapMethodBody(builder, map, definition, indent);
+            AddMapMethodBody(builder, indent);
             builder.AppendLine("}", indent);
 
-            builder.AppendLine(profileDocumentation, indent);
+            builder.AppendLine(profileMethodsInfo.Documentation, indent);
             builder.AppendLine($"public bool Try{methodDeclaration}", indent);
             builder.AppendLine("{", indent);
-            AddTryMethodBody(builder, map, indent);
+            AddTryMethodBody(builder, indent);
             builder.AppendLine("}", indent);
         }
     }
@@ -105,10 +147,10 @@ public class MapsGeneratorSourceWriter
         var parameters = BuildMapParameters(map);
         var methodDeclarations = new List<string>();
 
-        //todo this will not work because it checks the queue on the nested property rather than the parent. to map correctly it's probably worth creating a top level structure of the mappings
+        //todo this will not work because it checks the queue on the nested property rather than the parent. to currentMap correctly it's probably worth creating a top level structure of the mappings
         //var parametersBuilder = new StringBuilder();
-        //var propertyName = map.DestinationName;
-        //foreach (var mappedParameter in map.MapFromParameterProperties.Where(x =>
+        //var propertyName = currentMap.DestinationName;
+        //foreach (var mappedParameter in currentMap.MapFromParameterProperties.Where(x =>
         //             x.NestedPropertyDefinitionQueue.Peek() == propertyName))
         //{
         //    mappedParameter.NestedPropertyDefinitionQueue.Dequeue();
@@ -119,7 +161,7 @@ public class MapsGeneratorSourceWriter
 
         //if (!string.IsNullOrWhiteSpace(nestedPropertyParameters))
         //{
-        //    var methodNameWithComplexParameters = $"Map({map.SourceFullName} source, {parameters}{nestedPropertyParameters}out {map.DestinationFullName} destination)";
+        //    var methodNameWithComplexParameters = $"Map({currentMap.SourceFullName} source, {parameters}{nestedPropertyParameters}out {currentMap.DestinationFullName} destination)";
         //    methodDeclarations.Add(methodNameWithComplexParameters);
         //}
 
@@ -143,12 +185,12 @@ public class MapsGeneratorSourceWriter
         string.Join("", map.MapFromParameterProperties
             .Select(x => $"{x.Type} {x.VariableName}, "));
 
-    private static void AddTryMethodBody(StringBuilder builder, MappingInfo map, int indent)
+    private void AddTryMethodBody(StringBuilder builder, int indent)
     {
         indent++;
         builder.AppendLine("try", indent);
         builder.AppendLine("{", indent);
-        AddTryBody(builder, map, indent);
+        AddTryBody(builder, indent);
         builder.AppendLine("}", indent);
         builder.AppendLine("catch", indent);
         builder.AppendLine("{", indent);
@@ -157,9 +199,9 @@ public class MapsGeneratorSourceWriter
 
     }
 
-    private static void AddTryBody(StringBuilder builder, MappingInfo map, int indent)
+    private  void AddTryBody(StringBuilder builder, int indent)
     {
-        var parameters = string.Join("", map.MapFromParameterProperties
+        var parameters = string.Join("", _context.CurrentMap.MapFromParameterProperties
             .Select(x => x.VariableName + ", "));
 
         indent++;
@@ -174,18 +216,18 @@ public class MapsGeneratorSourceWriter
         builder.AppendLine("return false;", indent);
     }
 
-    private void AddMapMethodBody(StringBuilder builder, MappingInfo mappingInfo, ProfileDefinition profileDefinition, int indent)
+    private void AddMapMethodBody(StringBuilder builder, int indent)
     {
         indent++;
-        var mappings = MappingProvider.GetMappings(mappingInfo, profileDefinition.Maps, _compilation);
-        foreach (var mapping in mappings.ComplexMappingInfo)
+        MappingProvider.GetMappings(_context);
+        foreach (var mapping in _context.Mappings.ComplexMappingInfo)
         {
             builder.AppendLine(mapping.Invocation, indent);
         }
 
-        builder.AppendLine($"destination = new {mappingInfo.DestinationFullName}", indent);
+        builder.AppendLine($"destination = new {_context.CurrentMap.DestinationFullName}", indent);
         builder.AppendLine("{", indent);
-        AddClassInitializationBody(builder, mappings, indent);
+        AddClassInitializationBody(builder, _context.Mappings, indent);
         builder.AppendLine("};", indent);
     }
 
@@ -208,6 +250,11 @@ public class MapsGeneratorSourceWriter
         }
 
         foreach (var mapFrom in mappings.MapFromParameter)
+        {
+            builder.AppendLine(mapFrom, indent);
+        }
+        
+        foreach (var mapFrom in mappings.UnmappedProperties)
         {
             builder.AppendLine(mapFrom, indent);
         }

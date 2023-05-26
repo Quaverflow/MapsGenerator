@@ -10,8 +10,10 @@ internal class PersonProfile : MapperBase
         {  
             x.Exclude(y => y.LastName); 
             x.MapFrom(d => d.Zodiac, s => s.Traits.Zodiac);
+            x.MapFrom(d => d.StreamingPlatform, s => s.Lineage);
             x.MapFromParameter(d => d.FirstName);
-            x.MapFromParameter(d => d.Address.City);
+            x.EnsureAllDestinationPropertiesAreMapped();
+            //x.MapFromParameter(d => d.Address.City);
         });
         Map<Address, AddressDto>();
 

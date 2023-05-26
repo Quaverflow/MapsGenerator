@@ -6,52 +6,53 @@ namespace MapsGenerator.Helpers;
 
 public static class MappingProvider
 {
-    public static Mappings GetMappings(MappingInfo mappingInfo, MappingInfo[] maps, Compilation compilation)
+    public static void GetMappings(SourceWriterContext context)
     {
-        var mappings = new Mappings();
-        var sourceProperties = SyntaxHelper.GetProperties(mappingInfo.Source, compilation).ToArray();
-        var destinationProperties = SyntaxHelper.GetProperties(mappingInfo.Destination, compilation).ToArray();
+        var sourceProperties = SyntaxHelper.GetProperties(context.CurrentMap.Source, context.Compilation).ToArray();
+        var destinationProperties = SyntaxHelper.GetProperties(context.CurrentMap.Destination, context.Compilation).ToArray();
 
-        AddSimpleProperties(mappingInfo, sourceProperties, destinationProperties, mappings);
-        AddComplexProperties(mappingInfo, maps, sourceProperties, destinationProperties, mappings);
+        AddSimpleProperties(sourceProperties, destinationProperties, context);
+        AddComplexProperties(sourceProperties, destinationProperties, context);
 
-        foreach (var customMap in mappingInfo.MapFromProperties)
+        foreach (var customMap in context.CurrentMap.MapFromProperties)
         {
-            mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+            context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+            if (context.NotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
+            {
+                context.NotMappedProperties.Remove(notMapped);
+            }
         }
 
-        return mappings;
+        foreach (var unmappedProperty in context.NotMappedProperties)
+        {
+            context.Mappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
+        }
     }
 
     private static void AddComplexProperties(
-        MappingInfo mappingInfo,
-        MappingInfo[] maps,
-        IEnumerable<IPropertySymbol> sourceProperties,
+        IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties,
-        Mappings mappings)
+        SourceWriterContext context)
     {
         var complexPropertiesMatchingByName = SyntaxHelper.GetComplexMatchingProperties(
             sourceProperties,
-            destinationProperties);
+            destinationProperties,
+            context);
 
         foreach (var complexProperty in complexPropertiesMatchingByName)
         {
-            if (UseCommonMappings(mappingInfo, mappings, complexProperty))
+            if (UseCommonMappings(context, complexProperty))
             {
                 continue;
             }
-
-            if (maps.FirstOrDefault(x =>
+           
+            if (context.CurrentProfile.Maps.FirstOrDefault(x =>
                     x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
                     x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null)
             {
-                //if (mappingInfo.MapFromParameterProperties
-                //    .FirstOrDefault(x => x.Name == complexProperty.DestinationProperty.Name)
-                //    is {} m)
-
                 var parametersBuilder = new StringBuilder();
                 var complexPropertyName = complexProperty.DestinationProperty.Name;
-                foreach (var mappedParameter in mappingInfo.MapFromParameterProperties.Where(x =>
+                foreach (var mappedParameter in context.CurrentMap.MapFromParameterProperties.Where(x =>
                              x.NestedPropertyInvocationQueue.Peek() == complexPropertyName))
                 {
                     mappedParameter.NestedPropertyInvocationQueue.Dequeue();
@@ -62,48 +63,51 @@ public static class MappingProvider
                 var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
 
                 //todo add a check for duplication
-                mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
+                context.Mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
                     complexProperty.DestinationProperty.Name));
                 continue;
             }
 
-            mappings.MatchingByName.Add($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined");
+            context.Mappings.MatchingByName.Add($"//{complexProperty.DestinationProperty.Name} = source.{complexProperty.SourceProperty.Name} these property have matching name but no map has been defined");
         }
     }
 
-    private static void AddSimpleProperties(MappingInfo mappingInfo, IEnumerable<IPropertySymbol> sourceProperties,
-        IPropertySymbol[] destinationProperties, Mappings mappings)
+    private static void AddSimpleProperties(IPropertySymbol[] sourceProperties,
+        IPropertySymbol[] destinationProperties, SourceWriterContext context)
     {
         var simplePropertiesMatchingByName = SyntaxHelper.GetSimpleMatchingProperties(
             sourceProperties,
-            destinationProperties);
+            destinationProperties,
+            context);
+
+        var unmappedProperties = new List<IPropertySymbol>();
 
         foreach (var simpleProperty in simplePropertiesMatchingByName)
         {
-            if (UseCommonMappings(mappingInfo, mappings, simpleProperty))
+            if (UseCommonMappings(context, simpleProperty))
             {
                 continue;
             }
 
-            mappings.MatchingByName.Add($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},");
+            context.Mappings.MatchingByName.Add($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},");
         }
     }
 
-    private static bool UseCommonMappings(MappingInfo mappingInfo, Mappings mappings, PropertyPair simpleProperty)
+    private static bool UseCommonMappings(SourceWriterContext context, PropertyPair simpleProperty)
     {
-        if (IsExcluded(mappingInfo, simpleProperty))
+        if (IsExcluded(context.CurrentMap, simpleProperty))
         {
-            mappings.Excluded.Add($"//{simpleProperty.DestinationProperty.Name} was manually excluded");
+            context.Mappings.Excluded.Add($"//{simpleProperty.DestinationProperty.Name} was manually excluded");
             return true;
         }
 
-        if (mappingInfo.MapFromParameterProperties.FirstOrDefault(
+        if (context.CurrentMap.MapFromParameterProperties.FirstOrDefault(
                   x => x.Name == simpleProperty.DestinationProperty.Name) is {} property)
         {
-            mappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
+            context.Mappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
             return true;
         }
-        return IsDefinedAsMapFrom(mappingInfo, simpleProperty);
+        return IsDefinedAsMapFrom(context.CurrentMap, simpleProperty);
     }
 
     private static bool IsDefinedAsMapFrom(MappingInfo mappingInfo, PropertyPair complexProperty)

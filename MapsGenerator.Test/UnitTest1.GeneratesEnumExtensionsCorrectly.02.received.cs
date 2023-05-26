@@ -16,6 +16,7 @@ namespace MapsGenerator
                 Age = source.Age,
                 Height = source.Height,
                 Address = address,
+                Zodiac = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
                 //LastName was manually excluded
             };
         }

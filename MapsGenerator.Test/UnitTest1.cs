@@ -60,7 +60,8 @@ internal class PersonProfile : MapperBase
             x.Exclude(y => y.LastName);
             //x.MapFrom(d => d.AddressDto, s => s.Address);
             x.MapFromParameter(d => d.Address.City);
-
+            x.EnsureAllDestinationPropertiesAreMapped();
+            
         });
         Map<Address, AddressDto>();
 

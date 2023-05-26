@@ -41,6 +41,14 @@ namespace MapsGenerator
         /// <param name=""destinationProperty""></param>
         public void MapFromParameter<TProperty>(Func<TDestination, TProperty> destinationProperty)
         {
+        }       
+
+        /// <summary>
+        /// Will instantiate all properties of the destination whether mapped or not
+        /// </summary>
+        /// <param name=""destinationProperty""></param>
+        public void EnsureAllDestinationPropertiesAreMapped()
+        {
         }
     }
 }";

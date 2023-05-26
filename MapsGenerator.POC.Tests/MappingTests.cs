@@ -23,7 +23,7 @@ public class MappingTests
             }
         };
         var mapper = new MapGenerator();
-        mapper.Map(person, "John", "London", out var personDto);
+        mapper.Map(person, "John", out var personDto);
 
         Assert.Equal("John", personDto.FirstName);
         Assert.Equal("London", personDto.Address.City);

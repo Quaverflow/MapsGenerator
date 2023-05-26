@@ -1,6 +1,7 @@
 ﻿using MapsGenerator.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Xml.Linq;
 
 namespace MapsGenerator.DTOs;
 
@@ -12,6 +13,7 @@ public class MappingInfo
     public string DestinationName { get; }
     public string SourceFullName { get; }
     public string DestinationFullName { get; }
+    public bool EnsureAllDestinationPropertiesAreMapped { get; }
     public InvocationExpressionSyntax InvocationExpressionSyntax { get; }
     public List<string> ExcludedProperties { get; }
     public List<PropertyMapFromPair> MapFromProperties { get; }
@@ -31,6 +33,7 @@ public class MappingInfo
         ExcludedProperties = GetExcludedProperties();
         MapFromProperties = GetMapFromProperties();
         MapFromParameterProperties = GetMapFromParameterProperties(compilation);
+        EnsureAllDestinationPropertiesAreMapped = GetEnsureAllDestinationPropertiesAreMapped();
     }
 
     private List<string> GetExcludedProperties()
@@ -76,6 +79,41 @@ public class MappingInfo
         return excludedProperties;
     }
 
+    private bool GetEnsureAllDestinationPropertiesAreMapped()
+    {
+        
+        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
+        {
+            return false;
+        }
+
+        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
+        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax body })
+        {
+            return false;
+        }
+
+        foreach (var statement in body.Statements)
+        {
+            if (statement is ExpressionStatementSyntax
+                {
+                    Expression: InvocationExpressionSyntax
+                    {
+                        Expression: MemberAccessExpressionSyntax
+                        {
+                            Name.Identifier.Text: "EnsureAllDestinationPropertiesAreMapped"
+                        },
+                        ArgumentList.Arguments.Count: 0
+                    }
+                })
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
     private List<PropertyMapFromPair> GetMapFromProperties()
     {
         var mappedProperties = new List<PropertyMapFromPair>();
@@ -118,8 +156,10 @@ public class MappingInfo
             {
                 var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
                 var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+                var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
+                ;
 
-                mappedProperties.Add(new(sourceAccessName, destinationAccessName));
+                mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
             }
         }
 
@@ -187,7 +227,7 @@ public class MappingInfo
         return mappedProperties;
     }
 
-    private string GetNestedMemberAccessName(MemberAccessExpressionSyntax memberAccess)
+    private static string GetNestedMemberAccessName(MemberAccessExpressionSyntax memberAccess)
     {
         var name = memberAccess.Name.Identifier.Text;
 
