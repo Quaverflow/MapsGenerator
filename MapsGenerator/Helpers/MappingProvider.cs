@@ -1,16 +1,39 @@
 ﻿using System.Text;
 using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator.Helpers;
 
 public static class MappingProvider
 {
+    public static void GetAllTypeProperties(SourceWriterContext context)
+    {
+        foreach (var map in context.ProfileDefinitions.SelectMany(x => x.Maps))
+        {
+            var semanticModel = context.Compilation.GetSemanticModel(map.Source.SyntaxTree);
+            var sourceType = semanticModel.GetTypeInfo(map.Source).Type;
+            var destinationType = semanticModel.GetTypeInfo(map.Destination).Type;
+
+            var sourceProperties = SyntaxHelper.GetProperties(map.Source, semanticModel).ToArray();
+            var destinationProperties = SyntaxHelper.GetProperties(map.Destination, semanticModel).ToArray();
+
+            if (sourceType != null && !context.TypesProperties.ContainsKey(sourceType.ToString()))
+            {
+                context.TypesProperties.Add(sourceType.ToString(), new TypeProperties(sourceProperties, sourceType));
+            }
+            if (destinationType != null && !context.TypesProperties.ContainsKey(destinationType.ToString()))
+            {
+                context.TypesProperties.Add(destinationType.ToString(), new TypeProperties(destinationProperties, destinationType));
+            }
+        }
+    }
+
     public static void GetMappings(SourceWriterContext context)
     {
-        var sourceProperties = SyntaxHelper.GetProperties(context.CurrentMap.Source, context.Compilation).ToArray();
-        var destinationProperties = SyntaxHelper.GetProperties(context.CurrentMap.Destination, context.Compilation).ToArray();
 
+        var sourceProperties = context.TypesProperties[context.CurrentMap.SourceFullName].Properties;
+        var destinationProperties = context.TypesProperties[context.CurrentMap.DestinationFullName].Properties;
         AddSimpleProperties(sourceProperties, destinationProperties, context);
         AddComplexProperties(sourceProperties, destinationProperties, context);
 
@@ -45,7 +68,7 @@ public static class MappingProvider
             {
                 continue;
             }
-           
+
             if (context.CurrentProfile.Maps.FirstOrDefault(x =>
                     x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
                     x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null)
@@ -102,7 +125,7 @@ public static class MappingProvider
         }
 
         if (context.CurrentMap.MapFromParameterProperties.FirstOrDefault(
-                  x => x.Name == simpleProperty.DestinationProperty.Name) is {} property)
+                  x => x.Name == simpleProperty.DestinationProperty.Name) is { } property)
         {
             context.Mappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
             return true;
@@ -113,7 +136,7 @@ public static class MappingProvider
     private static bool IsDefinedAsMapFrom(MappingInfo mappingInfo, PropertyPair complexProperty)
         => mappingInfo.MapFromProperties.FirstOrDefault(x =>
             x.Destination == complexProperty.DestinationProperty.Name) is not null;
-    
+
     private static bool IsExcluded(MappingInfo mappingInfo, PropertyPair simpleProperty)
         => mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name);
 }

@@ -12,6 +12,8 @@ public class MapsGeneratorSourceWriter
     public MapsGeneratorSourceWriter(SourceWriterContext context)
     {
         _context = context;
+        MappingProvider.GetAllTypeProperties(context);
+
     }
 
     public (string contract, string implementation) GenerateSource()
@@ -84,7 +86,7 @@ public class MapsGeneratorSourceWriter
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
         var source = $"{_context.CurrentMap.SourceFullName} {_context.CurrentMap.SourceName.FirstCharToLower()}";
         var mapDeclaration = $"void Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
-        var tryMapDeclaration = $"bool Map({source}, {profileMethodsInfo.Parameters}, out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
+        var tryMapDeclaration = $"bool TryMap({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration}", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));

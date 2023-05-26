@@ -73,10 +73,8 @@ public static class SyntaxHelper
     public static bool IsSimplePropertySymbol(IPropertySymbol property)
         => property.Type.TypeKind != TypeKind.Class || property.Type.SpecialType == SpecialType.System_String;
 
-    public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, Compilation compilation)
+    public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, SemanticModel semanticModel)
     {
-        var semanticModel = compilation.GetSemanticModel(typeSyntax.SyntaxTree);
-
         return semanticModel.GetSymbolInfo(typeSyntax).Symbol is not INamedTypeSymbol typeSymbol
             ? Enumerable.Empty<IPropertySymbol>()
             : typeSymbol.GetMembers().OfType<IPropertySymbol>();
