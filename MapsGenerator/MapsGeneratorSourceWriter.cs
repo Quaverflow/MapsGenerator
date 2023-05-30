@@ -84,11 +84,11 @@ public class MapsGeneratorSourceWriter
             BuildDocumentation(_context.CurrentProfile));
 
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
-        var source = $"{_context.CurrentMap.SourceFullName} {_context.CurrentMap.SourceName.FirstCharToLower()}";
+        var source = $"{_context.CurrentMap.SourceFullName} source";
         var mapDeclaration = $"void Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
         var tryMapDeclaration = $"bool TryMap({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
 
-        _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration}", profileMethodsInfo.Documentation));
+        _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration};", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
 
         builder.AppendLine(profileMethodsInfo.Documentation, indent);
