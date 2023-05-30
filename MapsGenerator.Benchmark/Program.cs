@@ -8,6 +8,6 @@ using BenchmarkDotNet.Running;
  {
      private static void Main(string[] args)
      {
-        var summary = BenchmarkRunner.Run<MapperBenchmark>();
+        //var summary = BenchmarkRunner.Run<MapperBenchmark>();
     }
  }
