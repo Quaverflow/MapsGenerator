@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
+using System.Text.Json;
 using MapsGenerator.DTOs;
 using MapsGenerator.Helpers;
 using Microsoft.CodeAnalysis;
@@ -58,8 +59,16 @@ public class MappingGenerator : IIncrementalGenerator
             }
         }
 
-        var (contract, implementation) = new MapsGeneratorSourceWriter(new SourceWriterContext(profileDefinitions, compilation)).GenerateSource();
-        context.AddSource("MapGenerator", implementation);
-        context.AddSource("IMapGenerator", contract);
+        try
+        {
+            var (contract, implementation) = new MapsGeneratorSourceWriter(new SourceWriterContext(profileDefinitions, compilation)).GenerateSource();
+            context.AddSource("MapGenerator", implementation);
+            context.AddSource("IMapGenerator", contract);
+        }
+        catch (Exception e)
+        {
+            context.AddSource("Exceptions", e.Message);
+        }
+
     }
 }

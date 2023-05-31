@@ -15,7 +15,7 @@ public static class TestHelper
         };
 
         var compilation = CSharpCompilation.Create(
-            assemblyName: "Tests",
+            assemblyName: "MapsGenerator",
             syntaxTrees: new[] { syntaxTree },
             references: references); 
 

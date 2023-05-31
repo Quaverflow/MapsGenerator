@@ -10,45 +10,60 @@ namespace MapsGenerator.POC.Tests;
 public class MappingTests
 {
     private readonly IMapper _autoMapper;
+    private readonly Company _company;
+    private readonly MapGenerator _generator;
 
     public MappingTests()
     {
         _autoMapper = new MapperConfiguration(x => x.AddProfile(new AutoMapperProfile())).CreateMapper();
+        _generator = new MapGenerator();
+        
+        var fixture = new Fixture();
 
+        _company = fixture.Create<Company>();
     }
 
     [Fact]
-    public void TestValidMapping()
+    public void AutoMapper_Test()
     {
-        var fixture = new Fixture();
+        var result = _autoMapper.Map<CompanyDto>(_company);
+        Assert(_company, result);
+    }
+    
+    [Fact]
+    public void Generator_Test()
+    {
+        _generator.Map(_company, out var result);
+        Assert(_company, result);
+    }
 
-        var company = fixture.Create<Company>();
-        var result = _autoMapper.Map<CompanyDto>(company);
+    private static void Assert(Company company, CompanyDto result)
+    {
+        Xunit.Assert.Equal(company.Name, result.TradingName);
 
-        Assert.Equal(company.Name, result.TradingName);
-
-        Assert.Equal(company.Address.City, result.Address.City);
-        Assert.Equal(company.Address.Street, result.Address.Street);
+        Xunit.Assert.Equal(company.Address.City, result.Address.City);
+        Xunit.Assert.Equal(company.Address.Street, result.Address.Street);
 
         foreach (var employee in result.Workers)
         {
             var matching = company.Employees.First(x => x.Id == employee.Id);
 
-            Assert.Equal(matching.PersonalDetails.Address.City, employee.Address.City);
-            Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);
-            Assert.Equal(matching.PersonalDetails.FirstName, employee.FirstName);
-            Assert.Equal(matching.PersonalDetails.LastName, employee.LastName);
-            Assert.Equal(matching.PersonalDetails.Age, employee.Age);
-            Assert.Equal(matching.PersonalDetails.Height, employee.Height);
+            Xunit.Assert.Equal(matching.PersonalDetails.Address.City, employee.Address.City);
+            Xunit.Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);
+            Xunit.Assert.Equal(matching.PersonalDetails.FirstName, employee.FirstName);
+            Xunit.Assert.Equal(matching.PersonalDetails.LastName, employee.LastName);
+            Xunit.Assert.Equal(matching.PersonalDetails.Age, employee.Age);
+            Xunit.Assert.Equal(matching.PersonalDetails.Height, employee.Height);
             if (matching.Seniority == Seniority.Junior)
             {
-                Assert.Equal(SeniorityDto.Starter, employee.Seniority);
+                Xunit.Assert.Equal(SeniorityDto.Starter, employee.Seniority);
             }
             else
             {
-                Assert.Equal(matching.Seniority.ToString(), employee.Seniority.ToString());
+                Xunit.Assert.Equal(matching.Seniority.ToString(), employee.Seniority.ToString());
             }
-            Assert.Equal(matching.Role, employee.Role);
+
+            Xunit.Assert.Equal(matching.Role, employee.Role);
         }
     }
 }

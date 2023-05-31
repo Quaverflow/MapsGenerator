@@ -157,13 +157,23 @@ public class MappingInfo
                 var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
                 var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
                 var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
-                ;
 
                 mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
             }
         }
 
         return mappedProperties;
+    }
+
+    private SimpleNameSyntax GetIdentifier(MemberAccessExpressionSyntax sourcePropertyAccess)
+    {
+        var exp = sourcePropertyAccess;
+        while (exp.Expression is MemberAccessExpressionSyntax memberAccessExpressionSyntax)
+        {
+            exp = memberAccessExpressionSyntax;
+        }
+
+        return exp.Name;
     }
 
     private List<PropertyInfo> GetMapFromParameterProperties(Compilation compilation)

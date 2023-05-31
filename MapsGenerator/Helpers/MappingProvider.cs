@@ -31,7 +31,6 @@ public static class MappingProvider
 
     public static void GetMappings(SourceWriterContext context)
     {
-
         var sourceProperties = context.TypesProperties[context.CurrentMap.SourceFullName].Properties;
         var destinationProperties = context.TypesProperties[context.CurrentMap.DestinationFullName].Properties;
         AddSimpleProperties(sourceProperties, destinationProperties, context);
@@ -69,30 +68,40 @@ public static class MappingProvider
                 continue;
             }
 
-            if (context.CurrentProfile.Maps.FirstOrDefault(x =>
-                    x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
-                    x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null)
+            if (ComplexPropertyMapExists(context, complexProperty))
             {
-                var parametersBuilder = new StringBuilder();
-                var complexPropertyName = complexProperty.DestinationProperty.Name;
-                foreach (var mappedParameter in context.CurrentMap.MapFromParameterProperties.Where(x =>
-                             x.NestedPropertyInvocationQueue.Peek() == complexPropertyName))
-                {
-                    mappedParameter.NestedPropertyInvocationQueue.Dequeue();
-                    parametersBuilder.Append($"{mappedParameter.VariableName}, ");
-                }
-
-                var variable = complexPropertyName.FirstCharToLower();
-                var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
-
-                //todo add a check for duplication
-                context.Mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
-                    complexProperty.DestinationProperty.Name));
+                InvokeExistingComplexPropertyMap(context, complexProperty);
                 continue;
             }
 
             context.NotMappedProperties.Add(complexProperty.DestinationProperty);
         }
+    }
+
+    private static void InvokeExistingComplexPropertyMap(SourceWriterContext context, PropertyPair complexProperty)
+    {
+        var parametersBuilder = new StringBuilder();
+        var complexPropertyName = complexProperty.DestinationProperty.Name;
+        foreach (var mappedParameter in context.CurrentMap.MapFromParameterProperties.Where(x =>
+                     x.NestedPropertyInvocationQueue.Peek() == complexPropertyName))
+        {
+            mappedParameter.NestedPropertyInvocationQueue.Dequeue();
+            parametersBuilder.Append($"{mappedParameter.VariableName}, ");
+        }
+
+        var variable = complexPropertyName.FirstCharToLower();
+        var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
+
+        //todo add a check for duplication
+        context.Mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
+            complexProperty.DestinationProperty.Name));
+    }
+
+    private static bool ComplexPropertyMapExists(SourceWriterContext context, PropertyPair complexProperty)
+    {
+        return context.CurrentProfile.Maps.FirstOrDefault(x =>
+            x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
+            x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null;
     }
 
     private static void AddSimpleProperties(IPropertySymbol[] sourceProperties,
@@ -102,8 +111,6 @@ public static class MappingProvider
             sourceProperties,
             destinationProperties,
             context);
-
-        var unmappedProperties = new List<IPropertySymbol>();
 
         foreach (var simpleProperty in simplePropertiesMatchingByName)
         {

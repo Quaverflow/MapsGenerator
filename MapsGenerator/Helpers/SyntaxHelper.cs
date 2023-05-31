@@ -70,8 +70,11 @@ public static class SyntaxHelper
         return matchingProperties;
     }
 
-    public static bool IsSimplePropertySymbol(IPropertySymbol property)
-        => property.Type.TypeKind != TypeKind.Class || property.Type.SpecialType == SpecialType.System_String;
+    public static bool IsSimplePropertySymbol(this IPropertySymbol property)
+        => property.Type.IsSimplePropertySymbol();
+
+    public static bool IsSimplePropertySymbol(this ITypeSymbol type)
+        => type.TypeKind != TypeKind.Class || type.SpecialType == SpecialType.System_String;
 
     public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, SemanticModel semanticModel)
     {
@@ -85,7 +88,7 @@ public static class SyntaxHelper
 
     public static string GetTypeSyntaxFullName(CSharpSyntaxNode typeSyntax, Compilation compilation)
         => compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
-           ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
+           ?? throw new InvalidOperationException($"{typeSyntax} is not an Identifier");
 
     public static string GetTypeSyntaxFullName(ClassDeclarationSyntax classDeclarationSyntax)
     {
