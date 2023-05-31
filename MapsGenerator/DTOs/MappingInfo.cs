@@ -14,15 +14,20 @@ public class MappingInfo
     public string SourceFullName { get; }
     public string DestinationFullName { get; }
     public bool EnsureAllDestinationPropertiesAreMapped { get; }
+    public bool IsEnum { get; }
     public InvocationExpressionSyntax InvocationExpressionSyntax { get; }
     public List<string> ExcludedProperties { get; }
     public List<PropertyMapFromPair> MapFromProperties { get; }
+    public List<EnumValueMap> MapFromEnums { get; }
     public List<PropertyInfo> MapFromParameterProperties { get; }
 
     public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
         string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax,
         Compilation compilation)
     {
+        var semanticModel = compilation.GetSemanticModel(destination.SyntaxTree);
+        var type = semanticModel.GetSymbolInfo(destination).Symbol as INamedTypeSymbol;
+        IsEnum = type?.TypeKind is TypeKind.Enum;
         Source = source;
         Destination = destination;
         SourceName = sourceName;
@@ -33,6 +38,7 @@ public class MappingInfo
         ExcludedProperties = GetExcludedProperties();
         MapFromProperties = GetMapFromProperties();
         MapFromParameterProperties = GetMapFromParameterProperties(compilation);
+        MapFromEnums = GetMapFromEnums();
         EnsureAllDestinationPropertiesAreMapped = GetEnsureAllDestinationPropertiesAreMapped();
     }
 
@@ -114,7 +120,50 @@ public class MappingInfo
         return false;
     }
     
-    private List<PropertyMapFromPair> GetMapFromProperties()
+    private List<EnumValueMap> GetMapFromEnums()
+    {
+        var mapFromEnums = new List<EnumValueMap>();
+        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
+        {
+            return mapFromEnums;
+        }
+
+        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
+        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax body })
+        {
+            return mapFromEnums;
+        }
+
+        foreach (var statement in body.Statements)
+        {
+            if (statement is not ExpressionStatementSyntax
+                {
+                    Expression: InvocationExpressionSyntax
+                    {
+                        Expression: MemberAccessExpressionSyntax
+                        {
+                            Name.Identifier.Text: "MapFromEnum"
+                        },
+                        ArgumentList.Arguments.Count: 2
+                    } expression
+                })
+            {
+                continue;
+            }
+
+            if (expression.ArgumentList.Arguments[1].Expression is MemberAccessExpressionSyntax sourcePropertyAccess
+                && expression.ArgumentList.Arguments[0].Expression is MemberAccessExpressionSyntax destinationPropertyAccess)
+            {
+                var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
+                var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+
+                mapFromEnums.Add(new(sourceAccessName, destinationAccessName, expression.ArgumentList.Arguments[1].ToString(), expression.ArgumentList.Arguments[0].ToString()));
+            }
+        }
+
+        return mapFromEnums;
+    }
+       private List<PropertyMapFromPair> GetMapFromProperties()
     {
         var mappedProperties = new List<PropertyMapFromPair>();
         if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
@@ -163,17 +212,6 @@ public class MappingInfo
         }
 
         return mappedProperties;
-    }
-
-    private SimpleNameSyntax GetIdentifier(MemberAccessExpressionSyntax sourcePropertyAccess)
-    {
-        var exp = sourcePropertyAccess;
-        while (exp.Expression is MemberAccessExpressionSyntax memberAccessExpressionSyntax)
-        {
-            exp = memberAccessExpressionSyntax;
-        }
-
-        return exp.Name;
     }
 
     private List<PropertyInfo> GetMapFromParameterProperties(Compilation compilation)

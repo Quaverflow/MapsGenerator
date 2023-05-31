@@ -37,11 +37,11 @@ namespace somenamespace
                 x.EnsureAllDestinationPropertiesAreMapped();
             });
 
-        //    Map<Seniority, SeniorityDto>(x =>
-       //     {
-       //         //todo sort out enums
-       //         x.MapFrom(_ => SeniorityDto.Starter, _ => Seniority.Junior);
-       //     });
+            Map<Seniority, SeniorityDto>(x =>
+            {
+                //todo sort out enums
+                //x.MapFromEnum(SeniorityDto.Starter, Seniority.Junior);
+            });
         }
     }
     public class Address

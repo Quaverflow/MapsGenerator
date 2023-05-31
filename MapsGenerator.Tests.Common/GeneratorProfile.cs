@@ -13,7 +13,7 @@ internal class GeneratorProfile : MapperBase
             x.MapFrom(d => d.FirstName, s => s.PersonalDetails.FirstName);
             x.MapFrom(d => d.LastName, s => s.PersonalDetails.LastName);
             x.MapFrom(d => d.Age, s => s.PersonalDetails.Age);
-            x.MapFrom(d => d.Address, s => s.PersonalDetails.Address);
+            //x.MapFrom(d => d.Address, s => s.PersonalDetails.Address); todo the mapper needs to use a map for complex type mappings
             x.MapFrom(d => d.Height, s => s.PersonalDetails.Height);
             x.EnsureAllDestinationPropertiesAreMapped();
         });
@@ -29,8 +29,7 @@ internal class GeneratorProfile : MapperBase
 
         Map<Seniority, SeniorityDto>(x =>
         {
-            //todo sort out enums
-            x.MapFrom(_ => SeniorityDto.Starter, _ => Seniority.Junior);
+            x.MapFromEnum(SeniorityDto.Starter, Seniority.Junior);
         });
     }
 }

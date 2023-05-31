@@ -11,9 +11,15 @@ namespace MapsGenerator
         {
             destination = new somenamespace.PersonDto
             {
+                Seniority = (source.Seniority) switch
+                            {
+                                somenamespace.Seniority.Intermediate => somenamespace.SeniorityDto.Intermediate,
+                                somenamespace.Seniority.Senior => somenamespace.SeniorityDto.Senior,
+                                /*THIS VALUE DOESN'T HAVE A MAPPING*/ => somenamespace.SeniorityDto.Starter,
+                                _ => throw new ArgumentOutOfRangeException(nameof(va), va, null)
+                            },
                 Id = source.Id,
                 Role = source.Role,
-                Seniority = source.Seniority,
                 FirstName = source.PersonalDetails.FirstName,
                 LastName = source.PersonalDetails.LastName,
                 Age = source.PersonalDetails.Age,
@@ -25,7 +31,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Employee source,  out somenamespace.PersonDto destination, Action<Exception>? onError = null)
+        public bool TryMap(somenamespace.Employee source,  out somenamespace.PersonDto? destination, Action<Exception>? onError = null)
         {
             try
             {
@@ -55,7 +61,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Address source,  out somenamespace.AddressDto destination, Action<Exception>? onError = null)
+        public bool TryMap(somenamespace.Address source,  out somenamespace.AddressDto? destination, Action<Exception>? onError = null)
         {
             try
             {
@@ -88,7 +94,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Company source,  out somenamespace.CompanyDto destination, Action<Exception>? onError = null)
+        public bool TryMap(somenamespace.Company source,  out somenamespace.CompanyDto? destination, Action<Exception>? onError = null)
         {
             try
             {

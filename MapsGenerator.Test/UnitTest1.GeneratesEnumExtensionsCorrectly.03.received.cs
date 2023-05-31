@@ -12,7 +12,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(somenamespace.Employee source,  out somenamespace.PersonDto destination, Action<Exception>? onError = null);
+        bool TryMap(somenamespace.Employee source,  out somenamespace.PersonDto? destination, Action<Exception>? onError = null);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
@@ -22,7 +22,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(somenamespace.Address source,  out somenamespace.AddressDto destination, Action<Exception>? onError = null);
+        bool TryMap(somenamespace.Address source,  out somenamespace.AddressDto? destination, Action<Exception>? onError = null);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
@@ -32,6 +32,6 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(somenamespace.Company source,  out somenamespace.CompanyDto destination, Action<Exception>? onError = null);
+        bool TryMap(somenamespace.Company source,  out somenamespace.CompanyDto? destination, Action<Exception>? onError = null);
     }
 }

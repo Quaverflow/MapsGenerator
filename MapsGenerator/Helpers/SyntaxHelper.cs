@@ -46,24 +46,41 @@ public static class SyntaxHelper
         return matchingProperties;
     }
 
+    public static List<PropertyPair> GetEnumMatchingProperties(IPropertySymbol[] sourceProperties,
+        IEnumerable<IPropertySymbol> destinationProperties, SourceWriterContext context)
+    {
+        var matchingProperties = new List<PropertyPair>();
+        var enumDestinationProperties = destinationProperties.Where(IsEnum).ToArray();
+        foreach (var destinationProperty in enumDestinationProperties)
+        {
+            if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty)
+            {
+                matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
+            }
+            else
+            {
+                context.NotMappedProperties.Add(destinationProperty);
+            }
+        }
+
+        return matchingProperties;
+    }
+
     public static List<PropertyPair> GetComplexMatchingProperties(IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties, SourceWriterContext context)
     {
         var matchingProperties = new List<PropertyPair>();
-        var complexDestinationProperties = destinationProperties.Where(symbol => !IsSimplePropertySymbol(symbol)).ToArray();
+        var complexDestinationProperties = destinationProperties.Where(IsComplexPropertySymbol).ToArray();
 
         foreach (var destinationProperty in complexDestinationProperties)
         {
-            if (!IsSimplePropertySymbol(destinationProperty))
+            if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty)
             {
-                if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty)
-                {
-                    matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
-                }
-                else
-                {
-                    context.NotMappedProperties.Add(destinationProperty);
-                }
+                matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
+            }
+            else
+            {
+                context.NotMappedProperties.Add(destinationProperty);
             }
         }
 
@@ -71,10 +88,15 @@ public static class SyntaxHelper
     }
 
     public static bool IsSimplePropertySymbol(this IPropertySymbol property)
-        => property.Type.IsSimplePropertySymbol();
+        => property.Type.IsSimplePropertySymbol() && !property.IsEnum();
+    public static bool IsComplexPropertySymbol(this IPropertySymbol property)
+        => !property.Type.IsSimplePropertySymbol() && !property.IsEnum();
 
     public static bool IsSimplePropertySymbol(this ITypeSymbol type)
         => type.TypeKind != TypeKind.Class || type.SpecialType == SpecialType.System_String;
+
+    public static bool IsEnum(this IPropertySymbol property)
+        => property.Type.TypeKind is TypeKind.Enum;
 
     public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, SemanticModel semanticModel)
     {

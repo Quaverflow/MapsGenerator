@@ -63,7 +63,7 @@ public class MapsGeneratorSourceWriter
         builder.AppendLine("{", indent);
         foreach (var currentProfile in _context.ProfileDefinitions)
         {
-            foreach (var currentMap in currentProfile.Maps)
+            foreach (var currentMap in currentProfile.Maps.Where(x => !x.IsEnum))
             {
                 _context.Reset();
                 _context.CurrentProfile = currentProfile;
@@ -86,7 +86,7 @@ public class MapsGeneratorSourceWriter
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
         var source = $"{_context.CurrentMap.SourceFullName} source";
         var mapDeclaration = $"void Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
-        var tryMapDeclaration = $"bool TryMap({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination, Action<Exception>? onError = null)";
+        var tryMapDeclaration = $"bool TryMap({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration};", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
