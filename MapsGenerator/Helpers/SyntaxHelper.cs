@@ -65,6 +65,25 @@ public static class SyntaxHelper
 
         return matchingProperties;
     }
+    private static readonly string[] Collections = new[]
+    {
+        "ICollection" ,
+        "IList",
+        "IDictionary",
+        "IEnumerable",
+        "IReadOnlyCollection",
+        "IReadOnlyList",
+        "IQueue",
+        "IStack",
+        "ICollection<>",
+        "IList<>",
+        "IDictionary<>",
+        "IEnumerable<>",
+        "IReadOnlyCollection<>",
+        "IReadOnlyList<>",
+        "IQueue<>",
+        "IStack<>"
+    };
 
     public static List<PropertyPair> GetComplexMatchingProperties(IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties, SourceWriterContext context)
@@ -89,8 +108,15 @@ public static class SyntaxHelper
 
     public static bool IsSimplePropertySymbol(this IPropertySymbol property)
         => property.Type.IsSimplePropertySymbol() && !property.IsEnum();
-    public static bool IsComplexPropertySymbol(this IPropertySymbol property)
-        => !property.Type.IsSimplePropertySymbol() && !property.IsEnum();
+
+    public static bool IsComplexPropertySymbol(this IPropertySymbol property) =>
+        !property.Type.IsSimplePropertySymbol()
+        && !property.IsEnum()
+        && !property.Type.AllInterfaces.Select(x => x.Name).Any(x => Collections.Contains(x));
+
+    public static bool IsCollectionSymbol(this IPropertySymbol property) 
+        => !property.Type.IsSimplePropertySymbol()
+           && property.Type.AllInterfaces.Select(x => x.Name).Any(x => Collections.Contains(x));
 
     public static bool IsSimplePropertySymbol(this ITypeSymbol type)
         => type.TypeKind != TypeKind.Class || type.SpecialType == SpecialType.System_String;
@@ -130,5 +156,28 @@ public static class SyntaxHelper
         }
 
         throw new InvalidOperationException("couldn't find type arguments");
+    }
+
+    public static List<PropertyPair> GetCollectionProperties(IPropertySymbol[] sourceProperties, IEnumerable<IPropertySymbol> destinationProperties, SourceWriterContext context)
+    {
+        var matchingProperties = new List<PropertyPair>();
+
+        foreach (var destinationProperty in destinationProperties)
+        {
+            if (IsCollectionSymbol(destinationProperty))
+            {
+                if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty
+                    && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
+                {
+                    matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
+                }
+                else
+                {
+                    context.NotMappedProperties.Add(destinationProperty);
+                }
+            }
+        }
+
+        return matchingProperties;
     }
 }

@@ -37,6 +37,7 @@ public static class MappingProvider
         AddEnums(sourceProperties, destinationProperties, context);
         AddSimpleProperties(sourceProperties, destinationProperties, context);
         AddComplexProperties(sourceProperties, destinationProperties, context);
+        AddCollectionProperties(sourceProperties, destinationProperties, context);
 
         foreach (var customMap in context.CurrentMap.MapFromProperties)
         {
@@ -51,7 +52,7 @@ public static class MappingProvider
             {
                 context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
             }
-           
+
             if (context.NotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
             {
                 context.NotMappedProperties.Remove(notMapped);
@@ -63,6 +64,7 @@ public static class MappingProvider
             context.Mappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
         }
     }
+
 
     private static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
     {
@@ -78,7 +80,7 @@ public static class MappingProvider
             else
             {
                 var properties = result.Type.GetMembers().OfType<IPropertySymbol>().ToArray();
-                context.TypesProperties.Add(result.Type.Name,new TypeProperties(properties, result.Type));
+                context.TypesProperties.Add(result.Type.Name, new TypeProperties(properties, result.Type));
                 currentType = properties;
             }
 
@@ -146,6 +148,31 @@ public static class MappingProvider
         }
     }
 
+    private static void AddCollectionProperties(
+        IPropertySymbol[] sourceProperties,
+        IEnumerable<IPropertySymbol> destinationProperties,
+        SourceWriterContext context)
+    {
+        var collectionPropertiesMatchingByName = SyntaxHelper.GetCollectionProperties(
+            sourceProperties,
+            destinationProperties,
+            context);
+
+        foreach (var collectionProperty in collectionPropertiesMatchingByName)
+        {
+            if (UseCommonMappings(context, collectionProperty))
+            {
+                continue;
+            }
+
+            
+
+            context.NotMappedProperties.Add(collectionProperty.DestinationProperty);
+        }
+
+    }
+
+
     private static void AddComplexProperties(
         IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties,
@@ -162,7 +189,7 @@ public static class MappingProvider
             {
                 continue;
             }
-
+            
             if (ComplexPropertyMapExists(context, complexProperty))
             {
                 InvokeExistingComplexPropertyMap(context, complexProperty);

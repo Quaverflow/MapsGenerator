@@ -6,8 +6,8 @@ using BenchmarkDotNet.Running;
 
  internal class Program
  {
-     private static void Main(string[] _)
+     private static void Main()
      {
-        var summary = BenchmarkRunner.Run<MapperBenchmark>();
+        var _ = BenchmarkRunner.Run<MapperBenchmark>();
     }
  }
