@@ -8,6 +8,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="AutoFixture" Version="4.18.0" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\MapsGenerator.Tests.Common\MapsGenerator.Tests.Common.csproj" />
 	</ItemGroup>
 

@@ -1,58 +1,47 @@
-﻿//using AutoMapper;
-//using BenchmarkDotNet.Attributes;
-//using MapsGenerator.Tests.Common.Models;
-//using MapsGenerator.Tests.Common.Models.Destination;
-//using MapsGenerator.Tests.Common.Models.Source;
+﻿using AutoFixture;
+using AutoMapper;
+using BenchmarkDotNet.Attributes;
+using MapsGenerator.Tests.Common;
+using MapsGenerator.Tests.Common.Models.Destination;
+using MapsGenerator.Tests.Common.Models.Source;
 
-//namespace MapsGenerator.Tests.Common;
+namespace MapsGenerator.Benchmark;
 
-//[MemoryDiagnoser]
-//[RankColumn]
-//public class MapperBenchmark
-//{
-//    private readonly Person _person;
-//    private readonly IMapper _autoMapper;
-//    private readonly MapGenerator _generatedMapper;
+[MemoryDiagnoser]
+[RankColumn]
+public class MapperBenchmark
+{
+    private readonly IMapper _autoMapper;
+    private readonly Company _company;
+    private readonly MapGenerator _generator;
 
-//    public MapperBenchmark()
-//    {
-//        _person = new Person
-//        {
-//            FirstName = "abc",
-//            LastName = "cede",
-//            Age = 10,
-//            Address = new Address
-//            {
-//                Street = "adfawe",
-//                City = "ffff"
-//            },
-//            Traits = new Traits
-//            {
-//                Zodiac = "sotk"
-//            }
-//        };
+    public MapperBenchmark()
+    {
+        var fixture = new Fixture();
+        _company = fixture.Create<Company>();
 
-//        _autoMapper = new MapperConfiguration(x => x.AddProfile(new PersonProfile())).CreateMapper();
-//        _generatedMapper = new MapGenerator();
-//    }
+        _autoMapper = new MapperConfiguration(x => x.AddProfile(new AutoMapperProfile())).CreateMapper();
+        _generator = new MapGenerator();
 
-//    [Benchmark]
-//    public PersonDto UsingMapGenerator()
-//    {
-//        _generatedMapper.Map(_person, out var result);
-//        return result;
-//    }
+    }
 
-//    [Benchmark]
-//    public PersonDto UsingTryMapGenerator()
-//    {
-//        _generatedMapper.TryMap(_person, out var result);
-//        return result;
-//    }
+    [Benchmark]
+    public CompanyDto UsingMapGenerator()
+    {
+        _generator.Map(_company, out var result);
+        return result;
+    }
 
-//    [Benchmark]
-//    public PersonDto UsingAutoMapper()
-//    {
-//        return _autoMapper.Map<PersonDto>(_person);
-//    }
-//}
+    [Benchmark]
+    public CompanyDto UsingTryMapGenerator()
+    {
+        _generator.TryMap(_company, out var result);
+        return result;
+    }
+
+    [Benchmark]
+    public CompanyDto UsingAutoMapper()
+    {
+        return _autoMapper.Map<CompanyDto>(_company);
+    }
+}
