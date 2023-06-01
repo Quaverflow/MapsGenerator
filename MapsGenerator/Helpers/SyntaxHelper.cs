@@ -32,7 +32,7 @@ public static class SyntaxHelper
             if (IsSimplePropertySymbol(destinationProperty))
             {
                 if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty
-                    && destinationProperty.Type.Equals(destinationProperty.Type))
+                    && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
                 {
                     matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
                 }

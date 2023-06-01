@@ -2,6 +2,6 @@
 
 public class AddressDto
 {
-    public required string Street { get; set; }
-    public required string City { get; set; }
+    public  string Street { get; set; }
+    public  string City { get; set; }
 }

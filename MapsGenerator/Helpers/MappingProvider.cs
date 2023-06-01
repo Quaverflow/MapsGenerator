@@ -40,7 +40,18 @@ public static class MappingProvider
 
         foreach (var customMap in context.CurrentMap.MapFromProperties)
         {
-            context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+            var innerSourceProperty = GetInnerProperty(context, sourceProperties, customMap.Source);
+
+            if (innerSourceProperty.IsComplexPropertySymbol())
+            {
+                var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
+                InvokeExistingComplexPropertyMap(context, new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
+            }
+            else
+            {
+                context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+            }
+           
             if (context.NotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
             {
                 context.NotMappedProperties.Remove(notMapped);
@@ -51,6 +62,30 @@ public static class MappingProvider
         {
             context.Mappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
         }
+    }
+
+    private static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
+    {
+        var propertyNesting = nestedProperty.Split('.').ToArray();
+        var result = currentType.First(x => x.Name == propertyNesting[0]);
+
+        foreach (var property in propertyNesting.Skip(1))
+        {
+            if (context.TypesProperties.TryGetValue(result.Type.Name, out var value))
+            {
+                currentType = value.Properties;
+            }
+            else
+            {
+                var properties = result.Type.GetMembers().OfType<IPropertySymbol>().ToArray();
+                context.TypesProperties.Add(result.Type.Name,new TypeProperties(properties, result.Type));
+                currentType = properties;
+            }
+
+            result = currentType.First(x => x.Name == property);
+        }
+
+        return result;
     }
 
     private static void AddEnums(IPropertySymbol[] sourceProperties, IPropertySymbol[] destinationProperties, SourceWriterContext context)
@@ -86,7 +121,7 @@ public static class MappingProvider
                     {
                         matchingEnumNames.Add($"                                {matching} => {destinationValue},");
                     }
-                    else if(context.CurrentMap.EnsureAllDestinationPropertiesAreMapped)
+                    else if (context.CurrentMap.EnsureAllDestinationPropertiesAreMapped)
                     {
                         unmatchedEnumNames.Add($"                                /*THIS VALUE DOESN'T HAVE A MAPPING*/ => {destinationValue},");
                     }
@@ -138,7 +173,7 @@ public static class MappingProvider
         }
     }
 
-    private static void InvokeExistingComplexPropertyMap(SourceWriterContext context, PropertyPair complexProperty)
+    private static void InvokeExistingComplexPropertyMap(SourceWriterContext context, PropertyPair complexProperty, string? sourceName = null)
     {
         var parametersBuilder = new StringBuilder();
         var complexPropertyName = complexProperty.DestinationProperty.Name;
@@ -150,7 +185,7 @@ public static class MappingProvider
         }
 
         var variable = complexPropertyName.FirstCharToLower();
-        var invocation = $"Map(source.{complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
+        var invocation = $"Map(source.{sourceName ?? complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
 
         //todo add a check for duplication
         context.Mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,

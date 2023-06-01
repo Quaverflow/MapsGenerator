@@ -11,9 +11,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MapsGenerator.POC.Tests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MapsGenerator.Benchmark", "MapsGenerator.Benchmark\MapsGenerator.Benchmark.csproj", "{C9C6BBC1-3359-408C-9528-7D6DA947F595}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapsGenerator.Tests.Common", "MapsGenerator.Tests.Common\MapsGenerator.Tests.Common.csproj", "{D00A794E-42DB-458C-8150-9BEC2699AEBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MapsGenerator.Tests.Common", "MapsGenerator.Tests.Common\MapsGenerator.Tests.Common.csproj", "{D00A794E-42DB-458C-8150-9BEC2699AEBC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{239F9E86-2406-43BA-8EBA-DA1B99ED5C4A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD993320-C14E-40FA-96C2-B69CA9C2C4F6}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

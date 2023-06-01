@@ -9,6 +9,7 @@ namespace MapsGenerator
 /// </summary>
         public void Map(somenamespace.Employee source,  out somenamespace.PersonDto destination)
         {
+            Map(source.PersonalDetails.Address, out var address);
             destination = new somenamespace.PersonDto
             {
                 Seniority = (source.Seniority) switch
@@ -16,14 +17,14 @@ namespace MapsGenerator
                                 somenamespace.Seniority.Intermediate => somenamespace.SeniorityDto.Intermediate,
                                 somenamespace.Seniority.Senior => somenamespace.SeniorityDto.Senior,
                                 /*THIS VALUE DOESN'T HAVE A MAPPING*/ => somenamespace.SeniorityDto.Starter,
-                                _ => throw new ArgumentOutOfRangeException(nameof(va), va, null)
+                                _ => throw new ArgumentOutOfRangeException(nameof(source.Seniority), source.Seniority, null)
                             },
                 Id = source.Id,
                 Role = source.Role,
+                Address = address,
                 FirstName = source.PersonalDetails.FirstName,
                 LastName = source.PersonalDetails.LastName,
                 Age = source.PersonalDetails.Age,
-                Address = source.PersonalDetails.Address,
                 Height = source.PersonalDetails.Height,
             };
         }
