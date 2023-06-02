@@ -158,7 +158,7 @@ public class MapsGeneratorSourceWriter
     {
         indent++;
         builder.AppendLine("destination = null;", indent);
-        builder.AppendLine("if(onError != null) { onError(e); }", indent);
+        builder.AppendLine("onError?.Invoke(e);", indent);
         builder.AppendLine("return false;", indent);
     }
 
