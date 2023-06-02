@@ -48,6 +48,10 @@ public static class MappingProvider
                 var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
                 InvokeExistingComplexPropertyMap(context, new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
             }
+            else if (innerSourceProperty.Type.IsCollectionSymbol())
+            {
+                context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source}.Select(x => Map(x, out var _).ToArray(),");
+            }
             else
             {
                 context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
@@ -64,7 +68,6 @@ public static class MappingProvider
             context.Mappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
         }
     }
-
 
     private static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
     {

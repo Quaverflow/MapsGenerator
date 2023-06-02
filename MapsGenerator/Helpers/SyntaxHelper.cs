@@ -65,25 +65,7 @@ public static class SyntaxHelper
 
         return matchingProperties;
     }
-    private static readonly string[] Collections = new[]
-    {
-        "ICollection" ,
-        "IList",
-        "IDictionary",
-        "IEnumerable",
-        "IReadOnlyCollection",
-        "IReadOnlyList",
-        "IQueue",
-        "IStack",
-        "ICollection<>",
-        "IList<>",
-        "IDictionary<>",
-        "IEnumerable<>",
-        "IReadOnlyCollection<>",
-        "IReadOnlyList<>",
-        "IQueue<>",
-        "IStack<>"
-    };
+
 
     public static List<PropertyPair> GetComplexMatchingProperties(IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties, SourceWriterContext context)
@@ -111,15 +93,11 @@ public static class SyntaxHelper
 
     public static bool IsComplexPropertySymbol(this IPropertySymbol property) =>
         !property.Type.IsSimplePropertySymbol()
-        && !property.IsEnum()
-        && !property.Type.AllInterfaces.Select(x => x.Name).Any(x => Collections.Contains(x));
-
-    public static bool IsCollectionSymbol(this IPropertySymbol property) 
-        => !property.Type.IsSimplePropertySymbol()
-           && property.Type.AllInterfaces.Select(x => x.Name).Any(x => Collections.Contains(x));
+        && !property.Type.IsCollectionSymbol()
+        && !property.IsEnum();
 
     public static bool IsSimplePropertySymbol(this ITypeSymbol type)
-        => type.TypeKind != TypeKind.Class || type.SpecialType == SpecialType.System_String;
+        => (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Array) || type.SpecialType == SpecialType.System_String;
 
     public static bool IsEnum(this IPropertySymbol property)
         => property.Type.TypeKind is TypeKind.Enum;
@@ -164,7 +142,7 @@ public static class SyntaxHelper
 
         foreach (var destinationProperty in destinationProperties)
         {
-            if (IsCollectionSymbol(destinationProperty))
+            if (destinationProperty.Type.IsCollectionSymbol())
             {
                 if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty
                     && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
@@ -179,5 +157,34 @@ public static class SyntaxHelper
         }
 
         return matchingProperties;
+    }
+
+    public static bool IsCollectionSymbol(this ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol.IsSimplePropertySymbol())
+        {
+            return false;
+        }
+        var enumerableType = typeSymbol.AllInterfaces
+            .FirstOrDefault(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable);
+
+
+        if (enumerableType != null)
+        {
+            if (enumerableType is { TypeArguments.Length: 1 })
+            {
+                return true;
+            }
+
+            if (enumerableType.TypeArguments.Length == 0)
+            {
+                return true;
+            }
+        }
+
+        var collectionType = typeSymbol.AllInterfaces
+            .FirstOrDefault(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_ICollection_T);
+
+        return collectionType is { };
     }
 }

@@ -85,7 +85,7 @@ public class MapsGeneratorSourceWriter
 
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
         var source = $"{_context.CurrentMap.SourceFullName} source";
-        var mapDeclaration = $"void Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
+        var mapDeclaration = $"{_context.CurrentMap.SourceFullName} Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
         var tryMapDeclaration = $"bool TryMap({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration};", profileMethodsInfo.Documentation));
@@ -197,5 +197,8 @@ public class MapsGeneratorSourceWriter
         {
             builder.AppendLine(excludedProperty, indent);
         }
+
+        builder.AppendLine("return destination;", indent);
+
     }
 }
