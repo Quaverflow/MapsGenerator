@@ -7,6 +7,23 @@ namespace MapsGenerator.Helpers;
 
 public static class SyntaxHelper
 {
+    public static string GetFullNamespace(this ITypeSymbol typeSymbol)
+    {
+        var namespaceSymbol = typeSymbol.ContainingNamespace;
+        var namespaceName = namespaceSymbol.Name;
+
+        while (!namespaceSymbol.IsGlobalNamespace)
+        {
+            namespaceSymbol = namespaceSymbol.ContainingNamespace;
+            if (!namespaceSymbol.IsGlobalNamespace)
+            {
+                namespaceName = namespaceSymbol.Name + "." + namespaceName;
+            }
+        }
+
+        return namespaceName;
+    }
+
     public static MappingInfo GetMappingInfo(InvocationExpressionSyntax map, Compilation compilation)
     {
         var typeArguments = GetTypeArguments(map).ToArray();

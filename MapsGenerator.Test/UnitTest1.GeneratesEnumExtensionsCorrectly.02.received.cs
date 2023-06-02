@@ -1,4 +1,12 @@
 ﻿//HintName: MapGenerator.cs
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
 namespace MapsGenerator
 {
     public class MapGenerator : IMapGenerator
@@ -7,10 +15,9 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.PersonDto Map(somenamespace.Employee source,  out somenamespace.PersonDto destination)
+        public somenamespace.PersonDto Map<T>(somenamespace.Employee source) where T : somenamespace.PersonDto
         {
-            Map(source.PersonalDetails.Address, out var address);
-            destination = new somenamespace.PersonDto
+            return new somenamespace.PersonDto
             {
                 Seniority = (source.Seniority) switch
                             {
@@ -21,13 +28,12 @@ namespace MapsGenerator
                             },
                 Id = source.Id,
                 Role = source.Role,
-                Address = address,
                 FirstName = source.PersonalDetails.FirstName,
                 LastName = source.PersonalDetails.LastName,
                 Age = source.PersonalDetails.Age,
                 Height = source.PersonalDetails.Height,
+                Address = Map<somenamespace.AddressDto>(source.PersonalDetails.Address),
             };
-            return destination;
         }
         
 /// <summary>
@@ -37,7 +43,7 @@ namespace MapsGenerator
         {
             try
             {
-                Map(source, out destination);
+                destination = Map<somenamespace.PersonDto>(source );
                 return true;
             }
             catch(Exception e)
@@ -51,14 +57,13 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.AddressDto Map(somenamespace.Address source,  out somenamespace.AddressDto destination)
+        public somenamespace.AddressDto Map<T>(somenamespace.Address source) where T : somenamespace.AddressDto
         {
-            destination = new somenamespace.AddressDto
+            return new somenamespace.AddressDto
             {
                 Street = source.Street,
                 City = source.City,
             };
-            return destination;
         }
         
 /// <summary>
@@ -68,7 +73,7 @@ namespace MapsGenerator
         {
             try
             {
-                Map(source, out destination);
+                destination = Map<somenamespace.AddressDto>(source );
                 return true;
             }
             catch(Exception e)
@@ -82,17 +87,15 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.CompanyDto Map(somenamespace.Company source,  out somenamespace.CompanyDto destination)
+        public somenamespace.CompanyDto Map<T>(somenamespace.Company source) where T : somenamespace.CompanyDto
         {
-            Map(source.Address, out var address);
-            destination = new somenamespace.CompanyDto
+            return new somenamespace.CompanyDto
             {
-                Address = address,
                 TradingName = source.Name,
                 Workers = MapWorkersFromCollection(source.Employees),
                 Bees = MapBeesFromCollection(source),
+                Address = Map<somenamespace.AddressDto>(source.Address),
                 Sector = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
-                Bees = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
             };
             
             somenamespace.PersonDto[] MapWorkersFromCollection(somenamespace.Employee[] sourceCollection)
@@ -100,7 +103,7 @@ namespace MapsGenerator
                 var results = new List<somenamespace.PersonDto>();
                 foreach(var item in sourceCollection)
                 {
-                    var mappedItem = Map(item, out var _);
+                    var mappedItem = Map<somenamespace.PersonDto>(item);
                     results.Add(mappedItem);
                 }
 
@@ -112,7 +115,6 @@ namespace MapsGenerator
                     return s.Employees.ToDictionary(a => a.Id, a => Map(a, out _));
                 }
 
-            return destination;
         }
         
 /// <summary>
@@ -122,7 +124,7 @@ namespace MapsGenerator
         {
             try
             {
-                Map(source, out destination);
+                destination = Map<somenamespace.CompanyDto>(source );
                 return true;
             }
             catch(Exception e)

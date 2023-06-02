@@ -26,7 +26,7 @@ internal class GeneratorProfile : MapperBase
             x.MapFrom(d => d.Workers, s => s.Employees);
             x.MapFrom(d => d.Bees, s =>
             { 
-                return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+                return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map<PersonDto>(a));
             });    
 
             x.EnsureAllDestinationPropertiesAreMapped();

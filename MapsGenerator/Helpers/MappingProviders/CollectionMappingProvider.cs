@@ -42,7 +42,7 @@ public static class CollectionMappingProvider
                 var results = new List<{collectionArgumentType}>();
                 foreach(var item in sourceCollection)
                 {{
-                    var mappedItem = Map(item, out var _);
+                    var mappedItem = Map<{collectionArgumentType}>(item);
                     results.Add(mappedItem);
                 }}
 
@@ -61,7 +61,7 @@ public static class CollectionMappingProvider
                 var results = new {collectionType};
                 foreach(var item in sourceCollection)
                 {{
-                    var mappedItem = Map(item, out var _);
+                    var mappedItem = Map<{collectionArgumentType}>(item);
                     results.{action}(mappedItem);
                 }}
 

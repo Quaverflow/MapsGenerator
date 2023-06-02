@@ -28,8 +28,7 @@ public class MapperBenchmark
     [Benchmark]
     public CompanyDto UsingMapGenerator()
     {
-        _generator.Map(_company, out var result);
-        return result;
+        return _generator.Map<CompanyDto>(_company);
     }
 
     [Benchmark]

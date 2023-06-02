@@ -33,7 +33,7 @@ public class MappingTests
     [Fact]
     public void Generator_Test()
     {
-        var result =_generator.Map(_company, out _);
+        var result =_generator.Map<CompanyDto>(_company);
         AssertCompanyMap(_company, result);
     }
 

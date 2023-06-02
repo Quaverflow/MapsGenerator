@@ -1,4 +1,13 @@
 ﻿//HintName: IMapGenerator.cs
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
+using somenamespace;
 namespace MapsGenerator
 {
     public interface IMapGenerator
@@ -7,7 +16,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        somenamespace.PersonDto Map(somenamespace.Employee source,  out somenamespace.PersonDto destination);
+        somenamespace.PersonDto Map<T>(somenamespace.Employee source) where T : somenamespace.PersonDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
@@ -17,7 +26,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        somenamespace.AddressDto Map(somenamespace.Address source,  out somenamespace.AddressDto destination);
+        somenamespace.AddressDto Map<T>(somenamespace.Address source) where T : somenamespace.AddressDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
@@ -27,7 +36,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        somenamespace.CompanyDto Map(somenamespace.Company source,  out somenamespace.CompanyDto destination);
+        somenamespace.CompanyDto Map<T>(somenamespace.Company source) where T : somenamespace.CompanyDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>

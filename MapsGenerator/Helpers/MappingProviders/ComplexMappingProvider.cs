@@ -6,7 +6,6 @@ namespace MapsGenerator.Helpers.MappingProviders;
 
 public static class ComplexMappingProvider
 {
-
     public static void AddComplexProperties(
         IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties,
@@ -45,11 +44,13 @@ public static class ComplexMappingProvider
             parametersBuilder.Append($"{mappedParameter.VariableName}, ");
         }
 
-        var variable = complexPropertyName.FirstCharToLower();
-        var invocation = $"Map(source.{sourceName ?? complexProperty.SourceProperty.Name}, {parametersBuilder}out var {variable});";
+        var parameterBuilderString = parametersBuilder.ToString();
+        var parameters = string.IsNullOrWhiteSpace(parameterBuilderString)
+            ? null
+            : $", {parameterBuilderString}";
 
-        context.Mappings.ComplexMappingInfo.Add(new ComplexMappingInfo(invocation, variable,
-            complexProperty.DestinationProperty.Name));
+        var invocation = $"Map<{complexProperty.DestinationProperty.Type}>(source.{sourceName ?? complexProperty.SourceProperty.Name}{parameters})";
+        context.Mappings.MapFromParameter.Add($"{complexProperty.DestinationProperty.Name} = {invocation},");
     }
 
     private static bool ComplexPropertyMapExists(SourceWriterContext context, PropertyPair complexProperty)

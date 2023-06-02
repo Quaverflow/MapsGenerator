@@ -48,8 +48,13 @@ public class MapsGeneratorSourceWriter
         }
     }
 
-    private static void AddNamespace(StringBuilder builder, int indent, Action<StringBuilder, int> addBody)
+    private void AddNamespace(StringBuilder builder, int indent, Action<StringBuilder, int> addBody)
     {
+        foreach (var usingStatement in _context.TypesProperties.Select(x =>
+                     $"using {x.Value.Type.GetFullNamespace()};").Distinct())
+        {
+            builder.AppendLine(usingStatement, indent);
+        }
         builder.AppendLine("namespace MapsGenerator", indent);
         builder.AppendLine("{", indent);
         addBody(builder, indent);
@@ -85,8 +90,11 @@ public class MapsGeneratorSourceWriter
 
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
         var source = $"{_context.CurrentMap.SourceFullName} source";
-        var mapDeclaration = $"{_context.CurrentMap.DestinationFullName} Map({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName} destination)";
-        var tryMapDeclaration = $"bool TryMap({source}, {profileMethodsInfo.Parameters} out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
+        var parameters = string.IsNullOrWhiteSpace(profileMethodsInfo.Parameters)
+            ? null
+            : $", {profileMethodsInfo.Parameters}";
+        var mapDeclaration = $"{_context.CurrentMap.DestinationFullName} Map<T>({source}{parameters}) where T : {_context.CurrentMap.DestinationFullName}";
+        var tryMapDeclaration = $"bool TryMap({source}{parameters ?? ", "} out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration};", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
@@ -134,11 +142,15 @@ public class MapsGeneratorSourceWriter
 
     private void AddTryBody(StringBuilder builder, int indent)
     {
-        var parameters = string.Join("", _context.CurrentMap.MapFromParameterProperties
+        var foundParameters = string.Join("", _context.CurrentMap.MapFromParameterProperties
             .Select(x => x.VariableName + ", "));
-
+       
+        var parameters = string.IsNullOrWhiteSpace(foundParameters)
+            ? null
+            : $", {foundParameters}";
+      
         indent++;
-        builder.AppendLine($"Map(source, {parameters}out destination);", indent);
+        builder.AppendLine($"destination = Map<{_context.CurrentMap.DestinationFullName}>(source {parameters});", indent);
         builder.AppendLine("return true;", indent);
     }
 
@@ -154,12 +166,8 @@ public class MapsGeneratorSourceWriter
     {
         indent++;
         MappingProvider.GetMappings(_context);
-        foreach (var mapping in _context.Mappings.ComplexMappingInfo)
-        {
-            builder.AppendLine(mapping.Invocation, indent);
-        }
 
-        builder.AppendLine($"destination = new {_context.CurrentMap.DestinationFullName}", indent);
+        builder.AppendLine($"return new {_context.CurrentMap.DestinationFullName}", indent);
         builder.AppendLine("{", indent);
         AddClassInitializationBody(builder, _context.Mappings, indent);
         builder.AppendLine("};", indent);
@@ -168,8 +176,6 @@ public class MapsGeneratorSourceWriter
         {
             builder.AppendLine(function, indent);
         }
-       
-        builder.AppendLine("return destination;", indent);
     }
 
     private static void AddClassInitializationBody(StringBuilder builder, Mappings mappings, int indent)
@@ -178,11 +184,6 @@ public class MapsGeneratorSourceWriter
         foreach (var matchingByName in mappings.MatchingByName)
         {
             builder.AppendLine(matchingByName, indent);
-        }
-
-        foreach (var complexMappingInfo in mappings.ComplexMappingInfo)
-        {
-            builder.AppendLine($"{complexMappingInfo.Destination} = {complexMappingInfo.Variable},", indent);
         }
 
         foreach (var mapFrom in mappings.MapFrom)
