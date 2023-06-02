@@ -7,6 +7,8 @@ namespace MapsGenerator.Helpers;
 
 public static class SyntaxHelper
 {
+    private static readonly Dictionary<CSharpSyntaxNode, string> TypeSyntaxFullNameCache = new();
+
     public static string GetFullNamespace(this ITypeSymbol typeSymbol)
     {
         var namespaceSymbol = typeSymbol.ContainingNamespace;
@@ -48,8 +50,8 @@ public static class SyntaxHelper
         {
             if (IsSimplePropertySymbol(destinationProperty))
             {
-                if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty
-                    && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
+                var sourceProperty = sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name);
+                if (sourceProperty != null && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
                 {
                     matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
                 }
@@ -68,9 +70,11 @@ public static class SyntaxHelper
     {
         var matchingProperties = new List<PropertyPair>();
         var enumDestinationProperties = destinationProperties.Where(IsEnum).ToArray();
+
         foreach (var destinationProperty in enumDestinationProperties)
         {
-            if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty)
+            var sourceProperty = sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name);
+            if (sourceProperty != null)
             {
                 matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
             }
@@ -83,7 +87,6 @@ public static class SyntaxHelper
         return matchingProperties;
     }
 
-
     public static List<PropertyPair> GetComplexMatchingProperties(IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties, SourceWriterContext context)
     {
@@ -92,7 +95,8 @@ public static class SyntaxHelper
 
         foreach (var destinationProperty in complexDestinationProperties)
         {
-            if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty)
+            var sourceProperty = sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name);
+            if (sourceProperty != null)
             {
                 matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
             }
@@ -114,24 +118,32 @@ public static class SyntaxHelper
         && !property.IsEnum();
 
     public static bool IsSimplePropertySymbol(this ITypeSymbol type)
-        => (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Array) || type.SpecialType == SpecialType.System_String;
+        => type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Array || type.SpecialType == SpecialType.System_String;
 
     public static bool IsEnum(this IPropertySymbol property)
         => property.Type.TypeKind is TypeKind.Enum;
 
-    public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, SemanticModel semanticModel)
-    {
-        return semanticModel.GetSymbolInfo(typeSyntax).Symbol is not INamedTypeSymbol typeSymbol
+    public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, SemanticModel semanticModel) 
+        => semanticModel.GetSymbolInfo(typeSyntax).Symbol is not INamedTypeSymbol typeSymbol 
             ? Enumerable.Empty<IPropertySymbol>()
             : typeSymbol.GetMembers().OfType<IPropertySymbol>();
-    }
 
     public static string GetTypeSyntaxName(TypeSyntax typeSyntax)
         => (typeSyntax as IdentifierNameSyntax)?.Identifier.Text ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
 
     public static string GetTypeSyntaxFullName(CSharpSyntaxNode typeSyntax, Compilation compilation)
-        => compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
-           ?? throw new InvalidOperationException($"{typeSyntax} is not an Identifier");
+    {
+        if (TypeSyntaxFullNameCache.TryGetValue(typeSyntax, out var fullName))
+        {
+            return fullName;
+        }
+
+        fullName = compilation.GetSemanticModel(typeSyntax.SyntaxTree).GetSymbolInfo(typeSyntax).Symbol?.ToString()
+                   ?? throw new InvalidOperationException($"{typeSyntax} is not an Identifier");
+
+        TypeSyntaxFullNameCache[typeSyntax] = fullName;
+        return fullName;
+    }
 
     public static string GetTypeSyntaxFullName(ClassDeclarationSyntax classDeclarationSyntax)
     {
@@ -161,8 +173,8 @@ public static class SyntaxHelper
         {
             if (destinationProperty.Type.IsCollectionSymbol())
             {
-                if (sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name) is { } sourceProperty
-                    && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
+                var sourceProperty = sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name);
+                if (sourceProperty != null && destinationProperty.Type.Equals(destinationProperty.Type, SymbolEqualityComparer.Default))
                 {
                     matchingProperties.Add(new PropertyPair(sourceProperty, destinationProperty));
                 }
@@ -182,27 +194,15 @@ public static class SyntaxHelper
         {
             return false;
         }
-        var enumerableType = typeSymbol.AllInterfaces
-            .FirstOrDefault(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable);
 
-
-        if (enumerableType != null)
+        var enumerableType = typeSymbol.AllInterfaces.FirstOrDefault(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable);
+        if (enumerableType is { TypeArguments.Length: 1 or 0 })
         {
-            if (enumerableType is { TypeArguments.Length: 1 })
-            {
-                return true;
-            }
-
-            if (enumerableType.TypeArguments.Length == 0)
-            {
-                return true;
-            }
+            return true;
         }
 
-        var collectionType = typeSymbol.AllInterfaces
-            .FirstOrDefault(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_ICollection_T);
-
-        return collectionType is { };
+        var collectionType = typeSymbol.AllInterfaces.FirstOrDefault(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_ICollection_T);
+        return collectionType != null;
     }
 
     public static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
@@ -218,6 +218,7 @@ public static class SyntaxHelper
             }
             else
             {
+
                 var properties = result.Type.GetMembers().OfType<IPropertySymbol>().ToArray();
                 context.TypesProperties.Add(result.Type.Name, new TypeProperties(properties, result.Type));
                 currentType = properties;

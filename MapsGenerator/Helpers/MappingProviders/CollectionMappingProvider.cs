@@ -39,14 +39,14 @@ public static class CollectionMappingProvider
             localFunction = @$"
             {innerDestinationProperty.Type} {functionName}({innerSourceProperty.Type} sourceCollection)
             {{
-                var results = new List<{collectionArgumentType}>();
-                foreach(var item in sourceCollection)
+                var results = new {collectionArgumentType}[sourceCollection.Count()];
+                for (int i = 0; i < sourceCollection.Count(); i++)
                 {{
+                    var item = sourceCollection[i];
                     var mappedItem = Map<{collectionArgumentType}>(item);
-                    results.Add(mappedItem);
+                    results[i] = mappedItem;
                 }}
-
-                return results.ToArray();
+                return results;
             }}";
         }
 

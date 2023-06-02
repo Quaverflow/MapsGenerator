@@ -20,7 +20,11 @@ public class AutoMapperProfile : Profile
 
         CreateMap<Company, CompanyDto>()
             .ForMember(x => x.TradingName, y => y.MapFrom(z => z.Name))
-            .ForMember(x => x.Workers, y => y.MapFrom(z => z.Employees));
+            .ForMember(x => x.Workers, y => y.MapFrom(z => z.Employees))
+            .AfterMap((s, d, r) =>
+            {
+                d.Bees = s.Employees.ToDictionary(a => a.Id, a => r.Mapper.Map<PersonDto>(a));
+            });
 
         CreateMap<Seniority, SeniorityDto>()
             .ConvertUsingEnumMapping(x => x.MapValue(Seniority.Junior, SeniorityDto.Starter));
