@@ -42,23 +42,38 @@ public static class MappingProvider
 
         foreach (var customMap in context.CurrentMap.MapFromProperties)
         {
-            var innerSourceProperty = GetInnerProperty(context, sourceProperties, customMap.Source);
-            var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
-            
-            if (innerSourceProperty.IsComplexPropertySymbol())
+            if (customMap.IsExpressionMap)
             {
-                InvokeExistingComplexPropertyMap(context, new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
-            }
-            else if (innerSourceProperty.Type.IsCollectionSymbol())
-            {
-                var functionName = $"Map{customMap.Destination}FromCollection";
-                var localFunction = GetLocalFunctionForCollection(innerDestinationProperty, customMap, innerSourceProperty, functionName);
-                context.Mappings.LocalFunctions.Add(localFunction);
-                context.Mappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source.{customMap.Source}),");
+                var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
+                    var functionName = $"Map{customMap.Destination}FromCollection";
+                var localFunction = @$"
+            {innerDestinationProperty.Type} {functionName}({context.CurrentMap.SourceFullName} {customMap.LambdaIdentifier})
+{customMap.Source}
+";
+
+                context.Mappings.LocalFunctions.Add(localFunction.Replace("Mapper.", string.Empty));
+                context.Mappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source),");
             }
             else
             {
-                context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+                var innerSourceProperty = GetInnerProperty(context, sourceProperties, customMap.Source);
+                var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
+
+                if (innerSourceProperty.IsComplexPropertySymbol())
+                {
+                    InvokeExistingComplexPropertyMap(context, new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
+                }
+                else if (innerSourceProperty.Type.IsCollectionSymbol())
+                {
+                    var functionName = $"Map{customMap.Destination}FromCollection";
+                    var localFunction = GetLocalFunctionForCollection(innerDestinationProperty, customMap, innerSourceProperty, functionName);
+                    context.Mappings.LocalFunctions.Add(localFunction);
+                    context.Mappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source.{customMap.Source}),");
+                }
+                else
+                {
+                    context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+                }
             }
 
             if (context.NotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
@@ -95,7 +110,7 @@ public static class MappingProvider
             }}";
         }
 
-        if (innerDestinationProperty.Type is INamedTypeSymbol { TypeArguments.Length: 1 } namedType)
+        if (innerDestinationProperty.Type is INamedTypeSymbol namedType)
         {
             var collectionArgumentType = string.Join(", ", namedType.TypeArguments.Select(x => x.ToString()));
             var collectionType = $"{GetCollectionType(innerDestinationProperty.Type)}<{collectionArgumentType}>()";
@@ -144,7 +159,7 @@ public static class MappingProvider
 
         return collectionTypeName;
     }
-    
+
     private static string GetAddToCollectionActionName(ITypeSymbol symbol)
     {
         var collectionTypeName = string.Empty;
@@ -271,8 +286,6 @@ public static class MappingProvider
             {
                 continue;
             }
-
-
 
             context.NotMappedProperties.Add(collectionProperty.DestinationProperty);
         }

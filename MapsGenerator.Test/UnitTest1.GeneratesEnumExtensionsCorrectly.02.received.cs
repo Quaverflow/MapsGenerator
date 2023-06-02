@@ -7,7 +7,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.Employee Map(somenamespace.Employee source,  out somenamespace.PersonDto destination)
+        public somenamespace.PersonDto Map(somenamespace.Employee source,  out somenamespace.PersonDto destination)
         {
             Map(source.PersonalDetails.Address, out var address);
             destination = new somenamespace.PersonDto
@@ -51,7 +51,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.Address Map(somenamespace.Address source,  out somenamespace.AddressDto destination)
+        public somenamespace.AddressDto Map(somenamespace.Address source,  out somenamespace.AddressDto destination)
         {
             destination = new somenamespace.AddressDto
             {
@@ -82,7 +82,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.Company Map(somenamespace.Company source,  out somenamespace.CompanyDto destination)
+        public somenamespace.CompanyDto Map(somenamespace.Company source,  out somenamespace.CompanyDto destination)
         {
             Map(source.Address, out var address);
             destination = new somenamespace.CompanyDto
@@ -90,6 +90,9 @@ namespace MapsGenerator
                 Address = address,
                 TradingName = source.Name,
                 Workers = MapWorkersFromCollection(source.Employees),
+                Bees = MapBeesFromCollection(source.{ 
+                    return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+                }),
                 Sector = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
             };
             
@@ -102,8 +105,14 @@ namespace MapsGenerator
                     results.Add(mappedItem);
                 }
 
-                return result.ToArray();
+                return results.ToArray();
             }
+            
+            Dictionary<System.Guid, somenamespace.PersonDto> MapBeesFromCollection(somenamespace.Company s)
+{ 
+                    return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+                }
+
             return destination;
         }
         

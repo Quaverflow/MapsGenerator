@@ -1,6 +1,8 @@
 ﻿using MapsGenerator.Helpers;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq.Expressions;
 using System.Xml.Linq;
 
 namespace MapsGenerator.DTOs;
@@ -201,22 +203,64 @@ public class MappingInfo
             if (expression?.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
                 {
                     Body: MemberAccessExpressionSyntax destinationPropertyAccess
-                }
-                && expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
-                {
-                    Body: MemberAccessExpressionSyntax sourcePropertyAccess
                 })
             {
-                var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
-                var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
-                var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
+                if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
+                    {
+                        Body: MemberAccessExpressionSyntax sourcePropertyAccess
+                    })
+                {
+                    var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
+                    var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+                    var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
 
-                mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
+                    mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
 
+                }
+                else if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
+                         {
+                             Body: InvocationExpressionSyntax invocationExpression
+                         })
+                {
+                    AddExpressionBodySource(destinationPropertyAccess, invocationExpression.ToString(), mappedProperties);
+                }
+                else if(expression.ArgumentList.Arguments[1].Expression is LambdaExpressionSyntax
+                {
+                    Body: BlockSyntax innerExpressionBody
+                })
+                {
+                    var parameterIdentifier = expression
+                        .ArgumentList.Arguments[1].Expression
+                        .DescendantNodes()
+                        .OfType<ParameterSyntax>()
+                        .FirstOrDefault()
+                        ?.Identifier.ValueText;
+
+                    AddBlockBodySource(destinationPropertyAccess, innerExpressionBody.ToString(), mappedProperties, parameterIdentifier ?? throw new InvalidOperationException());
+                }
             }
         }
 
         return mappedProperties;
+    }
+
+    private static void AddExpressionBodySource(MemberAccessExpressionSyntax destinationPropertyAccess,
+        string invocationExpression, List<PropertyMapFromPair> mappedProperties, string identifier = "")
+    {
+        var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+        var source = invocationExpression.Substring(invocationExpression.IndexOf('.') + 1);
+        var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
+
+        mappedProperties.Add(new PropertyMapFromPair(source, destinationAccessName, destinationPropertyName, identifier));
+    }
+    
+    private static void AddBlockBodySource(MemberAccessExpressionSyntax destinationPropertyAccess,
+        string invocationExpression, List<PropertyMapFromPair> mappedProperties, string identifier = "")
+    {
+        var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+        var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
+
+        mappedProperties.Add(new PropertyMapFromPair(invocationExpression, destinationAccessName, destinationPropertyName, identifier));
     }
 
     private List<PropertyInfo> GetMapFromParameterProperties(Compilation compilation)

@@ -24,7 +24,12 @@ internal class GeneratorProfile : MapperBase
         {
             x.MapFrom(d => d.TradingName, s => s.Name);
             x.MapFrom(d => d.Sector, s => s.Name);
-            x.MapFrom(d => d.Workers, s => s.Employees); //todo create collection mapping
+            x.MapFrom(d => d.Workers, s => s.Employees);
+            x.MapFrom(d => d.Bees, s =>
+            { 
+                return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+            });    
+
             x.EnsureAllDestinationPropertiesAreMapped();
         });
 

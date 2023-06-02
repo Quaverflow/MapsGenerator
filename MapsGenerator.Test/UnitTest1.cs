@@ -34,7 +34,10 @@ namespace somenamespace
             {
                 x.MapFrom(d => d.TradingName, s => s.Name);
                 x.MapFrom(d => d.Workers, s => s.Employees);
-                x.EnsureAllDestinationPropertiesAreMapped();
+                x.MapFrom(d => d.Bees, s =>
+                { 
+                    return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+                });         x.EnsureAllDestinationPropertiesAreMapped();
             });
 
             Map<Seniority, SeniorityDto>(x =>
@@ -85,6 +88,7 @@ namespace somenamespace
         public  string TradingName { get; set; }
         public  string Sector { get; set; }
         public  PersonDto[] Workers { get; set; }
+        public  Dictionary<Guid, PersonDto>  Bees { get; set; }
         public  AddressDto Address { get; set; }
     }
 

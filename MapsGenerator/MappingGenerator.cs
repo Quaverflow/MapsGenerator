@@ -67,7 +67,7 @@ public class MappingGenerator : IIncrementalGenerator
         }
         catch (Exception e)
         {
-            context.AddSource("Exceptions", e.Message);
+            context.AddSource("Exceptions", e.Message + "\n" + e.StackTrace);
         }
 
     }
