@@ -1,4 +1,5 @@
-﻿using System.Reflection.PortableExecutable;
+﻿using System;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis;
@@ -42,15 +43,18 @@ public static class MappingProvider
         foreach (var customMap in context.CurrentMap.MapFromProperties)
         {
             var innerSourceProperty = GetInnerProperty(context, sourceProperties, customMap.Source);
-
+            var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
+            
             if (innerSourceProperty.IsComplexPropertySymbol())
             {
-                var innerDestinationProperty = GetInnerProperty(context, destinationProperties, customMap.Destination);
                 InvokeExistingComplexPropertyMap(context, new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
             }
             else if (innerSourceProperty.Type.IsCollectionSymbol())
             {
-                context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source}.Select(x => Map(x, out var _).ToArray(),");
+                var functionName = $"Map{customMap.Destination}FromCollection";
+                var localFunction = GetLocalFunctionForCollection(innerDestinationProperty, customMap, innerSourceProperty, functionName);
+                context.Mappings.LocalFunctions.Add(localFunction);
+                context.Mappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source.{customMap.Source}),");
             }
             else
             {
@@ -67,6 +71,106 @@ public static class MappingProvider
         {
             context.Mappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
         }
+    }
+
+    private static string GetLocalFunctionForCollection(IPropertySymbol innerDestinationProperty,
+        PropertyMapFromPair customMap, IPropertySymbol innerSourceProperty, string functionName)
+    {
+        var localFunction = string.Empty;
+        if (innerDestinationProperty.Type is IArrayTypeSymbol arrayType)
+        {
+            var collectionArgumentType = arrayType.ElementType.ToString();
+
+            localFunction = @$"
+            {innerDestinationProperty.Type} {functionName}({innerSourceProperty.Type} sourceCollection)
+            {{
+                var results = new List<{collectionArgumentType}>();
+                foreach(var item in sourceCollection)
+                {{
+                    var mappedItem = Map(item, out var _);
+                    results.Add(mappedItem);
+                }}
+
+                return results.ToArray();
+            }}";
+        }
+
+        if (innerDestinationProperty.Type is INamedTypeSymbol { TypeArguments.Length: 1 } namedType)
+        {
+            var collectionArgumentType = string.Join(", ", namedType.TypeArguments.Select(x => x.ToString()));
+            var collectionType = $"{GetCollectionType(innerDestinationProperty.Type)}<{collectionArgumentType}>()";
+            var action = GetAddToCollectionActionName(innerDestinationProperty.Type);
+            localFunction = @$"
+            {innerDestinationProperty.Type} Map{customMap.Destination}FromCollection({innerSourceProperty.Type} sourceCollection)
+            {{
+                var results = new {collectionType};
+                foreach(var item in sourceCollection)
+                {{
+                    var mappedItem = Map(item, out var _);
+                    results.{action}(mappedItem);
+                }}
+
+                return results;
+            }}";
+        }
+
+        return localFunction;
+    }
+
+    private static string GetCollectionType(ITypeSymbol symbol)
+    {
+        var collectionTypeName = string.Empty;
+
+        if (symbol is INamedTypeSymbol { IsGenericType: true } namedType)
+        {
+            var genericTypeDefinition = namedType.ConstructedFrom;
+
+            var containingNamespace = genericTypeDefinition.ContainingNamespace.ToString();
+            if (containingNamespace is "System.Collections" or "System.Collections.Generic")
+            {
+                collectionTypeName = genericTypeDefinition.Name switch
+                {
+                    "Queue" => "Queue",
+                    "SortedList" => "UNSUPPORTED MAPPING",
+                    "Stack" => "Stack",
+                    "List" => "List",
+                    "Dictionary" => "UNSUPPORTED MAPPING",
+                    "HashSet" => "HashSet",
+                    "SortedSet" => "SortedSet",
+                    _ => "UnknownCollection"
+                } ?? throw new InvalidOperationException();
+            }
+        }
+
+        return collectionTypeName;
+    }
+    
+    private static string GetAddToCollectionActionName(ITypeSymbol symbol)
+    {
+        var collectionTypeName = string.Empty;
+
+        if (symbol is INamedTypeSymbol { IsGenericType: true } namedType)
+        {
+            var genericTypeDefinition = namedType.ConstructedFrom;
+
+            var containingNamespace = genericTypeDefinition.ContainingNamespace.ToString();
+            if (containingNamespace is "System.Collections" or "System.Collections.Generic")
+            {
+                collectionTypeName = genericTypeDefinition.Name switch
+                {
+                    "Queue" => "Enqueue",
+                    "SortedList" => "Add",
+                    "Stack" => "Push",
+                    "List" => "Add",
+                    "Dictionary" => "Add",
+                    "HashSet" => "Add",
+                    "SortedSet" => "Add",
+                    _ => "UnknownCollection"
+                } ?? throw new InvalidOperationException();
+            }
+        }
+
+        return collectionTypeName;
     }
 
     private static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
@@ -168,7 +272,7 @@ public static class MappingProvider
                 continue;
             }
 
-            
+
 
             context.NotMappedProperties.Add(collectionProperty.DestinationProperty);
         }
@@ -192,7 +296,7 @@ public static class MappingProvider
             {
                 continue;
             }
-            
+
             if (ComplexPropertyMapExists(context, complexProperty))
             {
                 InvokeExistingComplexPropertyMap(context, complexProperty);

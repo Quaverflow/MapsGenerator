@@ -7,7 +7,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public void Map(somenamespace.Employee source,  out somenamespace.PersonDto destination)
+        public somenamespace.Employee Map(somenamespace.Employee source,  out somenamespace.PersonDto destination)
         {
             Map(source.PersonalDetails.Address, out var address);
             destination = new somenamespace.PersonDto
@@ -27,6 +27,7 @@ namespace MapsGenerator
                 Age = source.PersonalDetails.Age,
                 Height = source.PersonalDetails.Height,
             };
+            return destination;
         }
         
 /// <summary>
@@ -50,13 +51,14 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public void Map(somenamespace.Address source,  out somenamespace.AddressDto destination)
+        public somenamespace.Address Map(somenamespace.Address source,  out somenamespace.AddressDto destination)
         {
             destination = new somenamespace.AddressDto
             {
                 Street = source.Street,
                 City = source.City,
             };
+            return destination;
         }
         
 /// <summary>
@@ -80,16 +82,29 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public void Map(somenamespace.Company source,  out somenamespace.CompanyDto destination)
+        public somenamespace.Company Map(somenamespace.Company source,  out somenamespace.CompanyDto destination)
         {
             Map(source.Address, out var address);
             destination = new somenamespace.CompanyDto
             {
                 Address = address,
                 TradingName = source.Name,
-                Workers = source.Employees,
+                Workers = MapWorkersFromCollection(source.Employees),
                 Sector = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
             };
+            
+            somenamespace.PersonDto[] MapWorkersFromCollection(somenamespace.Employee[] sourceCollection)
+            {
+                var results = new List<somenamespace.PersonDto>();
+                foreach(var item in sourceCollection)
+                {
+                    var mappedItem = Map(item, out var _);
+                    results.Add(mappedItem);
+                }
+
+                return result.ToArray();
+            }
+            return destination;
         }
         
 /// <summary>

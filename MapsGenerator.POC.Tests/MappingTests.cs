@@ -33,7 +33,7 @@ public class MappingTests
     [Fact]
     public void Generator_Test()
     {
-        _generator.Map(_company, out var result);
+        var result =_generator.Map(_company, out _);
         Assert(_company, result);
     }
 
@@ -44,11 +44,9 @@ public class MappingTests
         Xunit.Assert.Equal(company.Address.City, result.Address.City);
         Xunit.Assert.Equal(company.Address.Street, result.Address.Street);
 
-        //foreach (var employee in result.Workers)
-        //{
-            //todo fix when using collections var matching = company.Employees.First(x => x.Id == employee.Id);
-            var matching = company.Employees;
-            var employee = result.Workers;
+        foreach (var employee in result.Workers)
+        {
+            var matching = company.Employees.First(x => x.Id == employee.Id);
 
             Xunit.Assert.Equal(matching.PersonalDetails.Address.City, employee.Address.City);
             Xunit.Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);
@@ -66,6 +64,6 @@ public class MappingTests
             }
 
             Xunit.Assert.Equal(matching.Role, employee.Role);
-        //}
+        }
     }
 }

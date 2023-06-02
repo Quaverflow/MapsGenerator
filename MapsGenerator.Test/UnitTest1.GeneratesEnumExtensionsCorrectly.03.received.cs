@@ -7,7 +7,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        void Map(somenamespace.Employee source,  out somenamespace.PersonDto destination);
+        somenamespace.Employee Map(somenamespace.Employee source,  out somenamespace.PersonDto destination);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
@@ -17,7 +17,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        void Map(somenamespace.Address source,  out somenamespace.AddressDto destination);
+        somenamespace.Address Map(somenamespace.Address source,  out somenamespace.AddressDto destination);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
@@ -27,7 +27,7 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        void Map(somenamespace.Company source,  out somenamespace.CompanyDto destination);
+        somenamespace.Company Map(somenamespace.Company source,  out somenamespace.CompanyDto destination);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>

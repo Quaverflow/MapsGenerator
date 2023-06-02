@@ -87,7 +87,6 @@ public class MappingInfo
 
     private bool GetEnsureAllDestinationPropertiesAreMapped()
     {
-        
         if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
         {
             return false;
@@ -119,39 +118,59 @@ public class MappingInfo
 
         return false;
     }
-    
+
+    private bool CheckIsValidMapFrom(out BlockSyntax? body)
+    {
+        body = null;
+        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
+        {
+            return false;
+        }
+        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
+        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax blockSyntax })
+        {
+            return false;
+        }
+
+        body = blockSyntax;
+        return true;
+    }
+
+    private static bool IsTargetForMapFrom(StatementSyntax? statement, string expressionName, int argsCount, out InvocationExpressionSyntax? expression)
+    {
+        expression = null;
+        if (statement is not ExpressionStatementSyntax
+            {
+                Expression: InvocationExpressionSyntax
+                {
+                    Expression: MemberAccessExpressionSyntax innerExpression,
+                } validExpression
+            })
+        {
+            return false;
+        }
+        expression = validExpression;
+
+        return expression.ArgumentList.Arguments.Count == argsCount ||
+               innerExpression.Name.Identifier.Text == expressionName;
+    }
+
     private List<EnumValueMap> GetMapFromEnums()
     {
         var mapFromEnums = new List<EnumValueMap>();
-        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
-        {
-            return mapFromEnums;
-        }
-
-        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
-        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax body })
+        if (!CheckIsValidMapFrom(out var body) || body == null)
         {
             return mapFromEnums;
         }
 
         foreach (var statement in body.Statements)
         {
-            if (statement is not ExpressionStatementSyntax
-                {
-                    Expression: InvocationExpressionSyntax
-                    {
-                        Expression: MemberAccessExpressionSyntax
-                        {
-                            Name.Identifier.Text: "MapFromEnum"
-                        },
-                        ArgumentList.Arguments.Count: 2
-                    } expression
-                })
+            if (!IsTargetForMapFrom(statement, "MapFromEnum", 2, out var expression))
             {
                 continue;
             }
 
-            if (expression.ArgumentList.Arguments[1].Expression is MemberAccessExpressionSyntax sourcePropertyAccess
+            if (expression?.ArgumentList.Arguments[1].Expression is MemberAccessExpressionSyntax sourcePropertyAccess
                 && expression.ArgumentList.Arguments[0].Expression is MemberAccessExpressionSyntax destinationPropertyAccess)
             {
                 var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
@@ -163,44 +182,29 @@ public class MappingInfo
 
         return mapFromEnums;
     }
-       private List<PropertyMapFromPair> GetMapFromProperties()
+    private List<PropertyMapFromPair> GetMapFromProperties()
     {
         var mappedProperties = new List<PropertyMapFromPair>();
-        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
-        {
-            return mappedProperties;
-        }
 
-        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
-        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax body })
+        if (!CheckIsValidMapFrom(out var body) || body == null)
         {
             return mappedProperties;
         }
 
         foreach (var statement in body.Statements)
         {
-            if (statement is not ExpressionStatementSyntax
-                {
-                    Expression: InvocationExpressionSyntax
-                    {
-                        Expression: MemberAccessExpressionSyntax
-                        {
-                            Name.Identifier.Text: "MapFrom"
-                        },
-                        ArgumentList.Arguments.Count: 2
-                    } expression
-                })
+            if (!IsTargetForMapFrom(statement, "MapFrom", 2, out var expression))
             {
                 continue;
             }
 
-            if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
-                {
-                    Body: MemberAccessExpressionSyntax sourcePropertyAccess
-                }
-                && expression.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
+            if (expression?.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
                 {
                     Body: MemberAccessExpressionSyntax destinationPropertyAccess
+                }
+                && expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
+                {
+                    Body: MemberAccessExpressionSyntax sourcePropertyAccess
                 })
             {
                 var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
@@ -208,6 +212,7 @@ public class MappingInfo
                 var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
 
                 mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
+
             }
         }
 
@@ -217,35 +222,19 @@ public class MappingInfo
     private List<PropertyInfo> GetMapFromParameterProperties(Compilation compilation)
     {
         var mappedProperties = new List<PropertyInfo>();
-        if (InvocationExpressionSyntax.ArgumentList.Arguments.Count != 1)
-        {
-            return mappedProperties;
-        }
-
-        var argument = InvocationExpressionSyntax.ArgumentList.Arguments[0];
-        if (argument.Expression is not SimpleLambdaExpressionSyntax { Body: BlockSyntax body })
+        if (!CheckIsValidMapFrom(out var body) || body == null)
         {
             return mappedProperties;
         }
 
         foreach (var statement in body.Statements)
         {
-            if (statement is not ExpressionStatementSyntax
-                {
-                    Expression: InvocationExpressionSyntax
-                    {
-                        Expression: MemberAccessExpressionSyntax
-                        {
-                            Name.Identifier.Text: "MapFromParameter"
-                        },
-                        ArgumentList.Arguments.Count: 1
-                    } expression
-                })
+            if (!IsTargetForMapFrom(statement, "MapFromParameter", 1, out var expression))
             {
                 continue;
             }
 
-            if (expression.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
+            if (expression?.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
                 {
                     Body: MemberAccessExpressionSyntax destinationPropertyAccess
                 })
