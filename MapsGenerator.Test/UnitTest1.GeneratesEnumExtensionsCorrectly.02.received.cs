@@ -90,10 +90,9 @@ namespace MapsGenerator
                 Address = address,
                 TradingName = source.Name,
                 Workers = MapWorkersFromCollection(source.Employees),
-                Bees = MapBeesFromCollection(source.{ 
-                    return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
-                }),
+                Bees = MapBeesFromCollection(source),
                 Sector = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
+                Bees = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
             };
             
             somenamespace.PersonDto[] MapWorkersFromCollection(somenamespace.Employee[] sourceCollection)
@@ -110,7 +109,7 @@ namespace MapsGenerator
             
             Dictionary<System.Guid, somenamespace.PersonDto> MapBeesFromCollection(somenamespace.Company s)
 { 
-                    return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+                    return s.Employees.ToDictionary(a => a.Id, a => Map(a, out _));
                 }
 
             return destination;

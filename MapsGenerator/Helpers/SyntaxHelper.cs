@@ -187,4 +187,28 @@ public static class SyntaxHelper
 
         return collectionType is { };
     }
+
+    public static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
+    {
+        var propertyNesting = nestedProperty.Split('.').ToArray();
+        var result = currentType.First(x => x.Name == propertyNesting[0]);
+
+        foreach (var property in propertyNesting.Skip(1))
+        {
+            if (context.TypesProperties.TryGetValue(result.Type.Name, out var value))
+            {
+                currentType = value.Properties;
+            }
+            else
+            {
+                var properties = result.Type.GetMembers().OfType<IPropertySymbol>().ToArray();
+                context.TypesProperties.Add(result.Type.Name, new TypeProperties(properties, result.Type));
+                currentType = properties;
+            }
+
+            result = currentType.First(x => x.Name == property);
+        }
+
+        return result;
+    }
 }
