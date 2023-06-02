@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using AutoMapper.Extensions.EnumMapping;
-using MapsGenerator.Tests.Common.Models;
 using MapsGenerator.Tests.Common.Models.Destination;
 using MapsGenerator.Tests.Common.Models.Source;
 

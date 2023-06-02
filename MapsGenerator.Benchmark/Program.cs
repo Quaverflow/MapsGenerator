@@ -1,6 +1,4 @@
-﻿ using System.Text;
- using MapsGenerator;
-using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Running;
 
  namespace MapsGenerator.Benchmark; 
 

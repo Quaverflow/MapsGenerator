@@ -1,8 +1,5 @@
-﻿using System;
-using System.Reflection.PortableExecutable;
-using MapsGenerator.DTOs;
+﻿using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator.Helpers.MappingProviders;
 
@@ -75,9 +72,9 @@ public static class MappingProvider
             }
 
             if (context.NotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
-                {
-                    context.NotMappedProperties.Remove(notMapped);
-                }
+            {
+                context.NotMappedProperties.Remove(notMapped);
+            }
         }
     }
 

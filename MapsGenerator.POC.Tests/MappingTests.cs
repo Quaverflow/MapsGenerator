@@ -1,6 +1,5 @@
 
 using AutoFixture;
-using Xunit;
 using AutoMapper;
 using MapsGenerator.Tests.Common;
 using MapsGenerator.Tests.Common.Models.Destination;

@@ -1,6 +1,4 @@
-﻿using MapsGenerator.Tests.Common.Models.Source;
-
-namespace MapsGenerator.Tests.Common.Models.Destination;
+﻿namespace MapsGenerator.Tests.Common.Models.Destination;
 
 public class PersonDto
 {

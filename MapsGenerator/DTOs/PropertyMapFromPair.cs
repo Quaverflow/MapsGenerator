@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-
-namespace MapsGenerator.DTOs;
+﻿namespace MapsGenerator.DTOs;
 
 public class PropertyMapFromPair
 {
