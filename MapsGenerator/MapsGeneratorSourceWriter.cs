@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MapsGenerator.DTOs;
 using MapsGenerator.Helpers;
+using MapsGenerator.Helpers.Extensions;
 using MapsGenerator.Helpers.MappingProviders;
 
 namespace MapsGenerator;

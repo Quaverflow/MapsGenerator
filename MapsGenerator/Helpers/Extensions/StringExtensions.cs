@@ -1,4 +1,4 @@
-﻿namespace MapsGenerator.Helpers;
+﻿namespace MapsGenerator.Helpers.Extensions;
 
 public static class StringExtensions
 {
