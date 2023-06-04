@@ -14,7 +14,6 @@ public class MapsGeneratorSourceWriter
     {
         _context = context;
         MappingProvider.GetAllTypeProperties(context);
-
     }
 
     public (string contract, string implementation) GenerateSource()
