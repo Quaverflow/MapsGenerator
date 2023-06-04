@@ -65,28 +65,16 @@ public static class Filter
     /// </summary>
     /// <param name="expressionSyntax"></param>
     /// <returns></returns>
-    private static bool FilterMapInvocations(ExpressionSyntax? expressionSyntax)
-    {
-        if (expressionSyntax is InvocationExpressionSyntax
-            {
-                Expression: GenericNameSyntax
-                {
-                    Identifier: { Text: "Map" },
-                    TypeArgumentList.Arguments.Count: 2
-                }
-            } invocation)
+    private static bool FilterMapInvocations(ExpressionSyntax? expressionSyntax) 
+        => expressionSyntax is InvocationExpressionSyntax
         {
-            var argCount = invocation.ArgumentList.Arguments.Count;
-
-            if (argCount is 0 or 1)
+            Expression: GenericNameSyntax
             {
-                //todo should check the type parameter to ensure it's the correct kind.
-                return true;
-            }
-        }
-
-        return false;
-    }
+                Identifier: { Text: "Map" },
+                TypeArgumentList.Arguments.Count: 2
+            },
+            ArgumentList.Arguments.Count: 0 or 1
+        };
 
     private static ConstructorDeclarationSyntax? GetParameterlessConstructor(TypeDeclarationSyntax classDeclaration)
     => classDeclaration.Members
