@@ -52,12 +52,12 @@ public static class EnumMappingProvider
 {string.Join("\n", unmatchedEnumNames)}
                                 _ => throw new ArgumentOutOfRangeException(nameof(source.{enumProperty.SourceProperty.Name}), source.{enumProperty.SourceProperty.Name}, null)
                             }}";
-                context.Mappings.MatchingByName.Add($"{enumProperty.DestinationProperty.Name} = {switchExpression},");
-                context.NotMappedProperties.Remove(enumProperty.DestinationProperty);
+                context.CurrentMappings.MatchingByName.Add($"{enumProperty.DestinationProperty.Name} = {switchExpression},");
+                context.CurrentNotMappedProperties.Remove(enumProperty.DestinationProperty);
             }
             else
             {
-                context.NotMappedProperties.Add(enumProperty.DestinationProperty);
+                context.CurrentNotMappedProperties.Add(enumProperty.DestinationProperty);
             }
         }
     }

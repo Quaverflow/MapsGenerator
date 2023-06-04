@@ -36,9 +36,9 @@ public static class MappingProvider
 
         GetMapFromMappings(context, destinationProperties, sourceProperties);
 
-        foreach (var unmappedProperty in context.NotMappedProperties)
+        foreach (var unmappedProperty in context.CurrentNotMappedProperties)
         {
-            context.Mappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
+            context.CurrentMappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
         }
     }
 
@@ -67,13 +67,13 @@ public static class MappingProvider
                 }
                 else
                 {
-                    context.Mappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+                    context.CurrentMappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
                 }
             }
 
-            if (context.NotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
+            if (context.CurrentNotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
             {
-                context.NotMappedProperties.Remove(notMapped);
+                context.CurrentNotMappedProperties.Remove(notMapped);
             }
         }
     }
@@ -88,8 +88,8 @@ public static class MappingProvider
 {customMap.Source}
 ";
 
-        context.Mappings.LocalFunctions.Add(localFunction.Replace("Mapper.", string.Empty));
-        context.Mappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source),");
+        context.CurrentMappings.LocalFunctions.Add(localFunction.Replace("Mapper.", string.Empty));
+        context.CurrentMappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source),");
     }
 
     private static void GetMapFromCollectionMapping(SourceWriterContext context, PropertyMapFromPair customMap,
@@ -98,8 +98,8 @@ public static class MappingProvider
         var functionName = $"Map{customMap.Destination}FromCollection";
         var localFunction = CollectionMappingProvider.GetLocalFunctionForCollection(innerDestinationProperty,
             customMap, innerSourceProperty, functionName);
-        context.Mappings.LocalFunctions.Add(localFunction);
-        context.Mappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source.{customMap.Source}),");
+        context.CurrentMappings.LocalFunctions.Add(localFunction);
+        context.CurrentMappings.MapFrom.Add($"{customMap.Destination} = {functionName}(source.{customMap.Source}),");
     }
 
     private static void GetStandardMappings(SourceWriterContext context, IPropertySymbol[] sourceProperties,

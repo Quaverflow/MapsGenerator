@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MapsGenerator.DTOs;
+using MapsGenerator.Helpers.Extensions;
 using Microsoft.CodeAnalysis;
 
 namespace MapsGenerator.Helpers.MappingProviders;
@@ -29,28 +30,39 @@ public static class ComplexMappingProvider
                 continue;
             }
 
-            context.NotMappedProperties.Add(complexProperty.DestinationProperty);
+            context.CurrentNotMappedProperties.Add(complexProperty.DestinationProperty);
         }
     }
 
     public static void InvokeExistingComplexPropertyMap(SourceWriterContext context, PropertyPair complexProperty, string? sourceName = null)
     {
-        var parametersBuilder = new StringBuilder();
+        var parametersList = new List<string>();
         var complexPropertyName = complexProperty.DestinationProperty.Name;
-        foreach (var mappedParameter in context.CurrentMap.MapFromParameterProperties.Where(x =>
-                     x.NestedPropertyInvocationQueue.Peek() == complexPropertyName))
+        var maps = context.ProfileDefinitions.SelectMany(x => x.Maps).ToArray();
+        var existingMap = maps.First(x => x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString());
+        var parameters = existingMap.MapFromParameterProperties.ToDictionary(
+            x => $"{complexPropertyName.FirstCharToLower()}_{x.Name.FirstCharToUpper()}", x => $"{x.Type}");
+
+        if (!context.CurrentParametersRequiredFromProperties.ContainsKey(complexPropertyName))
         {
-            mappedParameter.NestedPropertyInvocationQueue.Dequeue();
-            parametersBuilder.Append($"{mappedParameter.VariableName}, ");
+            context.CurrentParametersRequiredFromProperties.Add(complexPropertyName, new(complexProperty.DestinationProperty, parameters));
         }
 
-        var parameterBuilderString = parametersBuilder.ToString();
-        var parameters = string.IsNullOrWhiteSpace(parameterBuilderString)
-            ? null
-            : $", {parameterBuilderString}";
+        var parameterBuilderString = parameters.Select(x => x.Key).ToString();
 
-        var invocation = $"Map<{complexProperty.DestinationProperty.Type}>(source.{sourceName ?? complexProperty.SourceProperty.Name}{parameters})";
-        context.Mappings.MapFromParameter.Add($"{complexProperty.DestinationProperty.Name} = {invocation},");
+        var invocation = string.Empty;
+        if (string.IsNullOrWhiteSpace(parameterBuilderString))
+        {
+            invocation = $"Map<{complexProperty.DestinationProperty.Type}>(source.{sourceName ?? complexProperty.SourceProperty.Name})";
+            context.CurrentMappings.MapFromParameter.Add($"{complexProperty.DestinationProperty.Name} = {invocation},");
+        }
+        else
+        {
+
+
+            invocation = $"Map<{complexProperty.DestinationProperty.Type}>(source.{sourceName ?? complexProperty.SourceProperty.Name}, {parameterBuilderString})";
+            context.CurrentMappings.MapFromParameter.Add($"{complexProperty.DestinationProperty.Name} = {invocation},");
+        }
     }
 
     private static bool ComplexPropertyMapExists(SourceWriterContext context, PropertyPair complexProperty)

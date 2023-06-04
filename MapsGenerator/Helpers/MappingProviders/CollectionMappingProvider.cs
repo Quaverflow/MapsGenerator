@@ -22,7 +22,7 @@ public static class CollectionMappingProvider
                 continue;
             }
 
-            context.NotMappedProperties.Add(collectionProperty.DestinationProperty);
+            context.CurrentNotMappedProperties.Add(collectionProperty.DestinationProperty);
         }
 
     }

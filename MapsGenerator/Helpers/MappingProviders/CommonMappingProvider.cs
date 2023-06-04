@@ -8,14 +8,14 @@ public static class CommonMappingProvider
     {
         if (IsExcluded(context.CurrentMap, simpleProperty))
         {
-            context.Mappings.Excluded.Add($"//{simpleProperty.DestinationProperty.Name} was manually excluded");
+            context.CurrentMappings.Excluded.Add($"//{simpleProperty.DestinationProperty.Name} was manually excluded");
             return true;
         }
 
         if (context.CurrentMap.MapFromParameterProperties.FirstOrDefault(
                 x => x.Name == simpleProperty.DestinationProperty.Name) is { } property)
         {
-            context.Mappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
+            context.CurrentMappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
             return true;
         }
         return IsDefinedAsMapFrom(context.CurrentMap, simpleProperty);

@@ -170,10 +170,10 @@ public class MapsGeneratorSourceWriter
 
         builder.AppendLine($"return new {_context.CurrentMap.DestinationFullName}", indent);
         builder.AppendLine("{", indent);
-        AddClassInitializationBody(builder, _context.Mappings, indent);
+        AddClassInitializationBody(builder, _context.CurrentMappings, indent);
         builder.AppendLine("};", indent);
 
-        foreach (var function in _context.Mappings.LocalFunctions)
+        foreach (var function in _context.CurrentMappings.LocalFunctions)
         {
             builder.AppendLine(function, indent);
         }

@@ -16,7 +16,7 @@ internal class PersonProfile : MapperBase
             x.MapFrom(d => d.Height, s => s.PersonalDetails.Height);
             x.EnsureAllDestinationPropertiesAreMapped();
         });
-
+        Map<PersonDto, DateTime>(x => x.EnsureAllDestinationPropertiesAreMapped());
     }
 }
 internal class GeneratorProfile : MapperBase
@@ -26,15 +26,15 @@ internal class GeneratorProfile : MapperBase
 
         Map<Address, AddressDto>(x => x.EnsureAllDestinationPropertiesAreMapped());
 
-        Map<Company,CompanyDto>(x =>
+        Map<Company, CompanyDto>(x =>
         {
             x.MapFrom(d => d.TradingName, s => s.Name);
             x.MapFrom(d => d.Sector, s => s.Name);
             x.MapFrom(d => d.Workers, s => s.Employees);
             x.MapFrom(d => d.Bees, s =>
-            { 
+            {
                 return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map<PersonDto>(a));
-            });    
+            });
 
             x.EnsureAllDestinationPropertiesAreMapped();
         });

@@ -20,4 +20,10 @@ public static class StringExtensions
             ? string.Empty
             : $"{char.ToLower(input[0])}{input.Substring(1)}";
     }
+    public static string FirstCharToUpper(this string input)
+    {
+        return string.IsNullOrEmpty(input)
+            ? string.Empty
+            : $"{char.ToUpper(input[0])}{input.Substring(1)}";
+    }
 }

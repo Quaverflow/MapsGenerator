@@ -20,12 +20,13 @@ public class SourceWriterContext
     public Compilation Compilation { get; }
     public List<MethodDefinition> MapMethodsDefinitions { get; } = new();
     public List<ProfileMethodsInfo> ProfileMethodsInfo { get; } = new();
-    public List<IPropertySymbol> NotMappedProperties { get; } = new();
     public Dictionary<string, TypeProperties> TypesProperties { get; } = new();
 
+    public List<IPropertySymbol> CurrentNotMappedProperties { get; } = new();
     public ProfileDefinition CurrentProfile { get; set; } = null!;
     public MappingInfo CurrentMap { get; set; } = null!;
-    public Mappings Mappings { get; } = new();
+    public Mappings CurrentMappings { get; } = new();
+    public Dictionary<string, ParametersRequiredByProperty> CurrentParametersRequiredFromProperties { get; } = new();
 
     public SourceWriterContext(List<ProfileDefinition> profileDefinitions, Compilation compilation)
     {
@@ -35,8 +36,9 @@ public class SourceWriterContext
 
     public void Reset()
     {
-        Mappings.Reset();
-        NotMappedProperties.Clear();
+        CurrentMappings.Reset();
+        CurrentNotMappedProperties.Clear();
+        CurrentParametersRequiredFromProperties.Clear();
         CurrentMap = null!;
         CurrentProfile = null!;
     }

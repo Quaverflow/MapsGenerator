@@ -19,7 +19,7 @@ public static class SimpleMappingProvider
                 continue;
             }
 
-            context.Mappings.MatchingByName.Add($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},");
+            context.CurrentMappings.MatchingByName.Add($"{simpleProperty.DestinationProperty.Name} = source.{simpleProperty.SourceProperty.Name},");
         }
     }
 }

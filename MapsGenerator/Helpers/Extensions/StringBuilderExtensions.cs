@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace MapsGenerator.Helpers;
+namespace MapsGenerator.Helpers.Extensions;
 
 public static class StringBuilderExtensions
 {

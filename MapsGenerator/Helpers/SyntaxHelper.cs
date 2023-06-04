@@ -57,7 +57,7 @@ public static class SyntaxHelper
                 }
                 else
                 {
-                    context.NotMappedProperties.Add(destinationProperty);
+                    context.CurrentNotMappedProperties.Add(destinationProperty);
                 }
             }
         }
@@ -80,7 +80,7 @@ public static class SyntaxHelper
             }
             else
             {
-                context.NotMappedProperties.Add(destinationProperty);
+                context.CurrentNotMappedProperties.Add(destinationProperty);
             }
         }
 
@@ -102,7 +102,7 @@ public static class SyntaxHelper
             }
             else
             {
-                context.NotMappedProperties.Add(destinationProperty);
+                context.CurrentNotMappedProperties.Add(destinationProperty);
             }
         }
 
@@ -180,7 +180,7 @@ public static class SyntaxHelper
                 }
                 else
                 {
-                    context.NotMappedProperties.Add(destinationProperty);
+                    context.CurrentNotMappedProperties.Add(destinationProperty);
                 }
             }
         }
