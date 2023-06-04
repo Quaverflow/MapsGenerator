@@ -227,51 +227,6 @@ public static class MappingInfoProvider
         mappedProperties.Add(new PropertyMapFromPair(invocationExpression, destinationAccessName, destinationPropertyName, identifier));
     }
 
-    public static List<PropertyInfo> GetMapFromParameterProperties(Compilation compilation, InvocationExpressionSyntax invocationExpressionSyntax)
-    {
-        var mappedProperties = new List<PropertyInfo>();
-        if (!CheckIsValidMapFrom(invocationExpressionSyntax, out var body) || body == null)
-        {
-            return mappedProperties;
-        }
-
-        foreach (var statement in body.Statements)
-        {
-            if (!IsTargetForMapFrom(statement, "MapFromParameter", 1, out var expression))
-            {
-                continue;
-            }
-
-            if (expression?.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
-                {
-                    Body: MemberAccessExpressionSyntax destinationPropertyAccess
-                })
-            {
-                var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
-                var innerExpression = expression.ArgumentList.Arguments[0].Expression;
-                var syntaxTree = innerExpression.SyntaxTree;
-                var returnType = (compilation.GetSemanticModel(syntaxTree)
-                        .GetSymbolInfo(innerExpression).Symbol as IMethodSymbol)?.ReturnType
-                    .ToString();
-                if (returnType == null)
-                {
-                    throw new InvalidOperationException("Not a valid symbol");
-                }
-
-                var variableName = destinationAccessName.Replace(".", string.Empty).FirstCharToLower();
-                var nestedPropertyQueue = new Queue<string>();
-                foreach (var item in destinationAccessName.Split('.'))
-                {
-                    nestedPropertyQueue.Enqueue(item);
-                }
-
-                mappedProperties.Add(new PropertyInfo(destinationAccessName, returnType, variableName, nestedPropertyQueue));
-            }
-        }
-
-        return mappedProperties;
-    }
-
     public static string GetNestedMemberAccessName(MemberAccessExpressionSyntax memberAccess)
     {
         var name = memberAccess.Name.Identifier.Text;

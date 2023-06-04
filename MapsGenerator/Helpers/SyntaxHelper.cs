@@ -126,7 +126,7 @@ public static class SyntaxHelper
     public static IEnumerable<IPropertySymbol> GetProperties(ExpressionSyntax typeSyntax, SemanticModel semanticModel) 
         => semanticModel.GetSymbolInfo(typeSyntax).Symbol is not INamedTypeSymbol typeSymbol 
             ? Enumerable.Empty<IPropertySymbol>()
-            : typeSymbol.GetMembers().OfType<IPropertySymbol>();
+            : typeSymbol.GetMembers().OfType<IPropertySymbol>().Where(x => x.DeclaredAccessibility == Accessibility.Public);
 
     public static string GetTypeSyntaxName(TypeSyntax typeSyntax)
         => (typeSyntax as IdentifierNameSyntax)?.Identifier.Text ?? throw new InvalidOperationException("typeSyntax is not an Identifier");
