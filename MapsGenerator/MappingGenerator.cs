@@ -13,7 +13,6 @@ public class MappingGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Add the marker attribute
         context.RegisterPostInitializationOutput(ctx =>
         {
             ctx.AddSource("MapperBase.g.cs", SourceText.From(SourceGenerationHelper.Mapper, Encoding.UTF8));
