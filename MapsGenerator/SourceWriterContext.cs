@@ -26,7 +26,6 @@ public class SourceWriterContext
     public ProfileDefinition CurrentProfile { get; set; } = null!;
     public MappingInfo CurrentMap { get; set; } = null!;
     public Mappings CurrentMappings { get; } = new();
-    public Dictionary<string, ParametersRequiredByProperty> CurrentParametersRequiredFromProperties { get; } = new();
 
     public SourceWriterContext(List<ProfileDefinition> profileDefinitions, Compilation compilation)
     {
@@ -38,7 +37,6 @@ public class SourceWriterContext
     {
         CurrentMappings.Reset();
         CurrentNotMappedProperties.Clear();
-        CurrentParametersRequiredFromProperties.Clear();
         CurrentMap = null!;
         CurrentProfile = null!;
     }

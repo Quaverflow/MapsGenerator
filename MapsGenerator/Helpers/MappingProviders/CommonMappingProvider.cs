@@ -12,12 +12,6 @@ public static class CommonMappingProvider
             return true;
         }
 
-        if (context.CurrentMap.MapFromParameterProperties.FirstOrDefault(
-                x => x.Name == simpleProperty.DestinationProperty.Name) is { } property)
-        {
-            context.CurrentMappings.MapFromParameter.Add($"{property.Name} = {property.VariableName},");
-            return true;
-        }
         return IsDefinedAsMapFrom(context.CurrentMap, simpleProperty);
     }
 

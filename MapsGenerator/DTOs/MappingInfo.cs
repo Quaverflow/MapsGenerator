@@ -19,7 +19,6 @@ public class MappingInfo
     public IReadOnlyList<string> ExcludedProperties { get; }
     public IReadOnlyList<PropertyMapFromPair> MapFromProperties { get; }
     public IReadOnlyList<EnumValueMap> MapFromEnums { get; }
-    public IReadOnlyList<PropertyInfo> MapFromParameterProperties { get; }
 
     public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
         string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax,
@@ -37,7 +36,6 @@ public class MappingInfo
         InvocationExpressionSyntax = invocationExpressionSyntax;
         ExcludedProperties = MappingInfoProvider.GetExcludedProperties(InvocationExpressionSyntax);
         MapFromProperties = MappingInfoProvider.GetMapFromProperties(InvocationExpressionSyntax);
-        MapFromParameterProperties = MappingInfoProvider.GetMapFromParameterProperties(compilation, InvocationExpressionSyntax);
         MapFromEnums = MappingInfoProvider.GetMapFromEnums(InvocationExpressionSyntax);
         EnsureAllDestinationPropertiesAreMapped = MappingInfoProvider.GetEnsureAllDestinationPropertiesAreMapped(InvocationExpressionSyntax);
     }

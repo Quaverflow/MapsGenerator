@@ -16,7 +16,6 @@ internal class PersonProfile : MapperBase
             x.MapFrom(d => d.Height, s => s.PersonalDetails.Height);
             x.EnsureAllDestinationPropertiesAreMapped();
         });
-        Map<PersonDto, DateTime>(x => x.EnsureAllDestinationPropertiesAreMapped());
     }
 }
 internal class GeneratorProfile : MapperBase

@@ -85,17 +85,12 @@ public class MapsGeneratorSourceWriter
     {
         indent++;
 
-        var profileMethodsInfo = new ProfileMethodsInfo(
-            BuildMapParameters(_context.CurrentMap),
-            BuildDocumentation(_context.CurrentProfile));
+        var profileMethodsInfo = new ProfileMethodsInfo(BuildDocumentation(_context.CurrentProfile));
 
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
         var source = $"{_context.CurrentMap.SourceFullName} source";
-        var parameters = string.IsNullOrWhiteSpace(profileMethodsInfo.Parameters)
-            ? null
-            : $", {profileMethodsInfo.Parameters}";
-        var mapDeclaration = $"{_context.CurrentMap.DestinationFullName} Map<T>({source}{parameters}) where T : {_context.CurrentMap.DestinationFullName}";
-        var tryMapDeclaration = $"bool TryMap({source}{parameters ?? ", "} out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
+        var mapDeclaration = $"{_context.CurrentMap.DestinationFullName} Map<T>({source}) where T : {_context.CurrentMap.DestinationFullName}";
+        var tryMapDeclaration = $"bool TryMap({source}, out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration};", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
@@ -123,10 +118,6 @@ public class MapsGeneratorSourceWriter
         return profileDocumentation;
     }
 
-    private static string BuildMapParameters(MappingInfo map) =>
-        string.Join("", map.MapFromParameterProperties
-            .Select(x => $"{x.Type} {x.VariableName}, "));
-
     private void AddTryMethodBody(StringBuilder builder, int indent)
     {
         indent++;
@@ -143,15 +134,8 @@ public class MapsGeneratorSourceWriter
 
     private void AddTryBody(StringBuilder builder, int indent)
     {
-        var foundParameters = string.Join("", _context.CurrentMap.MapFromParameterProperties
-            .Select(x => x.VariableName + ", "));
-       
-        var parameters = string.IsNullOrWhiteSpace(foundParameters)
-            ? null
-            : $", {foundParameters}";
-      
         indent++;
-        builder.AppendLine($"destination = Map<{_context.CurrentMap.DestinationFullName}>(source {parameters});", indent);
+        builder.AppendLine($"destination = Map<{_context.CurrentMap.DestinationFullName}>(source);", indent);
         builder.AppendLine("return true;", indent);
     }
 
@@ -188,11 +172,6 @@ public class MapsGeneratorSourceWriter
         }
 
         foreach (var mapFrom in mappings.MapFrom)
-        {
-            builder.AppendLine(mapFrom, indent);
-        }
-
-        foreach (var mapFrom in mappings.MapFromParameter)
         {
             builder.AppendLine(mapFrom, indent);
         }
