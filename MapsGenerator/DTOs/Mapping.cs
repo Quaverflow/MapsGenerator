@@ -1,6 +1,6 @@
 ﻿namespace MapsGenerator.DTOs;
 
-public class Mappings
+public class Mapping
 {
     public List<string> MatchingByName { get; } = new();
     public List<string> MapFrom { get; } = new();

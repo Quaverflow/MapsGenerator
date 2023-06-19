@@ -1,13 +1,5 @@
 ﻿//HintName: IMapGenerator.cs
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
+using ;
 namespace MapsGenerator
 {
     public interface IMapGenerator
@@ -16,31 +8,31 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        somenamespace.PersonDto Map<T>(somenamespace.Employee source) where T : somenamespace.PersonDto;
+        PersonDto Map<T>(Employee source) where T : PersonDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(somenamespace.Employee source,  out somenamespace.PersonDto? destination, Action<Exception>? onError = null);
+        bool TryMap(Employee source, out PersonDto? destination, Action<Exception>? onError = null);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        somenamespace.AddressDto Map<T>(somenamespace.Address source) where T : somenamespace.AddressDto;
+        AddressDto Map<T>(Address source) where T : AddressDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(somenamespace.Address source,  out somenamespace.AddressDto? destination, Action<Exception>? onError = null);
+        bool TryMap(Address source, out AddressDto? destination, Action<Exception>? onError = null);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        somenamespace.CompanyDto Map<T>(somenamespace.Company source) where T : somenamespace.CompanyDto;
+        CompanyDto Map<T>(Company source) where T : CompanyDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(somenamespace.Company source,  out somenamespace.CompanyDto? destination, Action<Exception>? onError = null);
+        bool TryMap(Company source, out CompanyDto? destination, Action<Exception>? onError = null);
     }
 }

@@ -162,7 +162,7 @@ public class MapsGeneratorSourceWriter
         }
     }
 
-    private static void AddClassInitializationBody(StringBuilder builder, Mappings mappings, int indent)
+    private static void AddClassInitializationBody(StringBuilder builder, Mapping mappings, int indent)
     {
         indent++;
         foreach (var matchingByName in mappings.MatchingByName)

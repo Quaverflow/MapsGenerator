@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator.DTOs;
 
-public class MappingInfo
+public class ProfileInfo
 {
     public TypeSyntax Source { get; }
     public TypeSyntax Destination { get; }
@@ -20,7 +20,7 @@ public class MappingInfo
     public IReadOnlyList<PropertyMapFromPair> MapFromProperties { get; }
     public IReadOnlyList<EnumValueMap> MapFromEnums { get; }
 
-    public MappingInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
+    public ProfileInfo(TypeSyntax source, TypeSyntax destination, string sourceName, string destinationName,
         string sourceFullName, string destinationFullName, InvocationExpressionSyntax invocationExpressionSyntax,
         Compilation compilation)
     {

@@ -26,10 +26,10 @@ public static class SyntaxHelper
         return namespaceName;
     }
 
-    public static MappingInfo GetMappingInfo(InvocationExpressionSyntax map, Compilation compilation)
+    public static ProfileInfo GetMappingInfo(InvocationExpressionSyntax map, Compilation compilation)
     {
         var typeArguments = GetTypeArguments(map).ToArray();
-        var mappingInfo = new MappingInfo(
+        var mappingInfo = new ProfileInfo(
             typeArguments[0],
             typeArguments[1],
             GetTypeSyntaxName(typeArguments[0]),

@@ -1,12 +1,5 @@
 ﻿//HintName: MapGenerator.cs
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
-using somenamespace;
+using ;
 namespace MapsGenerator
 {
     public class MapGenerator : IMapGenerator
@@ -15,41 +8,41 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.PersonDto Map<T>(somenamespace.Employee source) where T : somenamespace.PersonDto
+        public PersonDto Map<T>(Employee source) where T : PersonDto
         {
-            return new somenamespace.PersonDto
+            return new PersonDto
             {
                 Seniority = (source.Seniority) switch
                             {
-                                somenamespace.Seniority.Intermediate => somenamespace.SeniorityDto.Intermediate,
-                                somenamespace.Seniority.Senior => somenamespace.SeniorityDto.Senior,
-                                /*THIS VALUE DOESN'T HAVE A MAPPING*/ => somenamespace.SeniorityDto.Starter,
+                                Seniority.Intermediate => SeniorityDto.Intermediate,
+                                Seniority.Senior => SeniorityDto.Senior,
+                                /*THIS VALUE DOESN'T HAVE A MAPPING*/ => SeniorityDto.Starter,
                                 _ => throw new ArgumentOutOfRangeException(nameof(source.Seniority), source.Seniority, null)
                             },
                 Id = source.Id,
                 Role = source.Role,
-                FirstName = source.PersonalDetails.FirstName,
                 LastName = source.PersonalDetails.LastName,
                 Age = source.PersonalDetails.Age,
+                Address = Map<AddressDto>(source.PersonalDetails.Address),
                 Height = source.PersonalDetails.Height,
-                Address = Map<somenamespace.AddressDto>(source.PersonalDetails.Address),
+                FirstName = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
             };
         }
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Employee source,  out somenamespace.PersonDto? destination, Action<Exception>? onError = null)
+        public bool TryMap(Employee source, out PersonDto? destination, Action<Exception>? onError = null)
         {
             try
             {
-                destination = Map<somenamespace.PersonDto>(source );
+                destination = Map<PersonDto>(source);
                 return true;
             }
             catch(Exception e)
             {
                 destination = null;
-                if(onError != null) { onError(e); }
+                onError?.Invoke(e);
                 return false;
             }
         }
@@ -57,9 +50,9 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.AddressDto Map<T>(somenamespace.Address source) where T : somenamespace.AddressDto
+        public AddressDto Map<T>(Address source) where T : AddressDto
         {
-            return new somenamespace.AddressDto
+            return new AddressDto
             {
                 Street = source.Street,
                 City = source.City,
@@ -69,17 +62,17 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Address source,  out somenamespace.AddressDto? destination, Action<Exception>? onError = null)
+        public bool TryMap(Address source, out AddressDto? destination, Action<Exception>? onError = null)
         {
             try
             {
-                destination = Map<somenamespace.AddressDto>(source );
+                destination = Map<AddressDto>(source);
                 return true;
             }
             catch(Exception e)
             {
                 destination = null;
-                if(onError != null) { onError(e); }
+                onError?.Invoke(e);
                 return false;
             }
         }
@@ -87,50 +80,49 @@ namespace MapsGenerator
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public somenamespace.CompanyDto Map<T>(somenamespace.Company source) where T : somenamespace.CompanyDto
+        public CompanyDto Map<T>(Company source) where T : CompanyDto
         {
-            return new somenamespace.CompanyDto
+            return new CompanyDto
             {
+                Address = Map<AddressDto>(source.Address),
                 TradingName = source.Name,
                 Workers = MapWorkersFromCollection(source.Employees),
-                Bees = MapBeesFromCollection(source),
-                Address = Map<somenamespace.AddressDto>(source.Address),
-                Sector = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
+                Bees = MapBeesFromExpression(source),
             };
             
-            somenamespace.PersonDto[] MapWorkersFromCollection(somenamespace.Employee[] sourceCollection)
+            PersonDto[] MapWorkersFromCollection(Employee[] sourceCollection)
             {
-                var results = new List<somenamespace.PersonDto>();
-                foreach(var item in sourceCollection)
+                var results = new PersonDto[sourceCollection.Count()];
+                for (int i = 0; i < sourceCollection.Count(); i++)
                 {
-                    var mappedItem = Map<somenamespace.PersonDto>(item);
-                    results.Add(mappedItem);
+                    var item = sourceCollection[i];
+                    var mappedItem = Map<PersonDto>(item);
+                    results[i] = mappedItem;
                 }
-
-                return results.ToArray();
+                return results;
             }
             
-            Dictionary<System.Guid, somenamespace.PersonDto> MapBeesFromCollection(somenamespace.Company s)
-{ 
-                    return s.Employees.ToDictionary(a => a.Id, a => Map(a, out _));
-                }
+            Dictionary<System.Guid, PersonDto> MapBeesFromExpression(Company s)
+=> s =>
+                
+                    s.Employees.ToDictionary(a => a.Id, a => Map(a, out _));
 
         }
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        public bool TryMap(somenamespace.Company source,  out somenamespace.CompanyDto? destination, Action<Exception>? onError = null)
+        public bool TryMap(Company source, out CompanyDto? destination, Action<Exception>? onError = null)
         {
             try
             {
-                destination = Map<somenamespace.CompanyDto>(source );
+                destination = Map<CompanyDto>(source);
                 return true;
             }
             catch(Exception e)
             {
                 destination = null;
-                if(onError != null) { onError(e); }
+                onError?.Invoke(e);
                 return false;
             }
         }

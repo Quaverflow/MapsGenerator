@@ -3,6 +3,7 @@ using MapsGenerator.Helpers.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq.Expressions;
 
 namespace MapsGenerator.Helpers;
 
@@ -181,13 +182,6 @@ public static class MappingInfoProvider
                     mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
 
                 }
-                else if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
-                {
-                    Body: InvocationExpressionSyntax invocationExpression
-                })
-                {
-                    AddExpressionBodySource(destinationPropertyAccess, invocationExpression.ToString(), mappedProperties);
-                }
                 else if (expression.ArgumentList.Arguments[1].Expression is LambdaExpressionSyntax
                 {
                     Body: BlockSyntax innerExpressionBody
@@ -202,6 +196,17 @@ public static class MappingInfoProvider
 
                     AddBlockBodySource(destinationPropertyAccess, innerExpressionBody.ToString(), mappedProperties, parameterIdentifier ?? throw new InvalidOperationException());
                 }
+                else if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax invocationExpression)
+                {
+                    var parameterIdentifier = expression
+                        .ArgumentList.Arguments[1].Expression
+                        .DescendantNodes()
+                        .OfType<ParameterSyntax>()
+                        .FirstOrDefault()
+                        ?.Identifier.ValueText;
+
+                    AddExpressionBodySource(destinationPropertyAccess, invocationExpression.ToString(), mappedProperties, parameterIdentifier ?? throw new InvalidOperationException());
+                }
             }
         }
 
@@ -212,7 +217,8 @@ public static class MappingInfoProvider
         string invocationExpression, List<PropertyMapFromPair> mappedProperties, string identifier = "")
     {
         var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
-        var source = invocationExpression.Substring(invocationExpression.IndexOf('.') + 1);
+        var methodBody = invocationExpression.Substring(invocationExpression.IndexOf('.') + 1);
+        var source = $"=> {identifier}.{methodBody};";
         var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
 
         mappedProperties.Add(new PropertyMapFromPair(source, destinationAccessName, destinationPropertyName, identifier));

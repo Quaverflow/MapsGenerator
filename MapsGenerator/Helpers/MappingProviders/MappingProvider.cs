@@ -38,7 +38,10 @@ public static class MappingProvider
 
         foreach (var unmappedProperty in context.CurrentNotMappedProperties)
         {
-            context.CurrentMappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
+            if (context.CurrentMap.EnsureAllDestinationPropertiesAreMapped)
+            {
+                context.CurrentMappings.UnmappedProperties.Add($"{unmappedProperty.Name} = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,");
+            }
         }
     }
 
@@ -82,7 +85,7 @@ public static class MappingProvider
         PropertyMapFromPair customMap)
     {
         var innerDestinationProperty = SyntaxHelper.GetInnerProperty(context, destinationProperties, customMap.Destination);
-        var functionName = $"Map{customMap.Destination}FromCollection";
+        var functionName = $"Map{customMap.Destination}FromExpression";
         var localFunction = @$"
             {innerDestinationProperty.Type} {functionName}({context.CurrentMap.SourceFullName} {customMap.LambdaIdentifier})
 {customMap.Source}

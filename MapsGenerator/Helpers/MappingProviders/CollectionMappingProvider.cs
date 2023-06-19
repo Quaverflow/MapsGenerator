@@ -24,7 +24,6 @@ public static class CollectionMappingProvider
 
             context.CurrentNotMappedProperties.Add(collectionProperty.DestinationProperty);
         }
-
     }
 
 

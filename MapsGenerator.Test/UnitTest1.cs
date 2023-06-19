@@ -20,7 +20,7 @@ namespace somenamespace
         {
             Map<Employee, PersonDto>(x =>
             {
-                x.MapFrom(d => d.FirstName, s => s.PersonalDetails.FirstName);
+                x.MapFrom(d => d.FirstName, ""hello"");
                 x.MapFrom(d => d.LastName, s => s.PersonalDetails.LastName);
                 x.MapFrom(d => d.Age, s => s.PersonalDetails.Age);
                 x.MapFrom(d => d.Address, s => s.PersonalDetails.Address);
@@ -35,9 +35,9 @@ namespace somenamespace
                 x.MapFrom(d => d.TradingName, s => s.Name);
                 x.MapFrom(d => d.Workers, s => s.Employees);
                 x.MapFrom(d => d.Bees, s =>
-                { 
-                    return s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
-                });         x.EnsureAllDestinationPropertiesAreMapped();
+                
+                    s.Employees.ToDictionary(a => a.Id, a => Mapper.Map(a, out _));
+                );         x.EnsureAllDestinationPropertiesAreMapped();
             });
 
             Map<Seniority, SeniorityDto>(x =>

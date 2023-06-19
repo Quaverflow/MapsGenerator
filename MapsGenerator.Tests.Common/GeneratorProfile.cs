@@ -9,8 +9,9 @@ internal class PersonProfile : MapperBase
     {
         Map<Employee, PersonDto>(x =>
         {
-            x.MapFrom(d => d.FirstName, s => s.PersonalDetails.FirstName);
+            x.MapFrom(d => d.FirstName, s=> s.PersonalDetails.FirstName);
             x.MapFrom(d => d.LastName, s => s.PersonalDetails.LastName);
+            x.Exclude(d => d.LastName);
             x.MapFrom(d => d.Age, s => s.PersonalDetails.Age);
             x.MapFrom(d => d.Address, s => s.PersonalDetails.Address);
             x.MapFrom(d => d.Height, s => s.PersonalDetails.Height);

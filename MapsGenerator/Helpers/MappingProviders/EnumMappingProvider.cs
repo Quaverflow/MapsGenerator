@@ -25,7 +25,8 @@ public static class EnumMappingProvider
             var unmatchedEnumNames = new List<string>();
             foreach (var destinationValue in destinationValues)
             {
-                if (context.ProfileDefinitions.SelectMany(x => x.Maps.SelectMany(y => y.MapFromEnums)).FirstOrDefault(x => x.Destination == destinationValue.Name) is { } manuallyMapped)
+                if (context.ProfileDefinitions.SelectMany(x => x.Maps.SelectMany(y => y.MapFromEnums))
+                    .FirstOrDefault(x => x.Destination == destinationValue.Name) is { } manuallyMapped)
                 {
                     var mappedSourceValue = sourceValues.First(x => x.Name == manuallyMapped.Source);
                     var mappedDestinationValue = destinationValues.First(x => x.Name == manuallyMapped.Destination);
@@ -37,7 +38,7 @@ public static class EnumMappingProvider
                     {
                         matchingEnumNames.Add($"                                {matching} => {destinationValue},");
                     }
-                    else if (context.CurrentMap.EnsureAllDestinationPropertiesAreMapped)
+                    else
                     {
                         unmatchedEnumNames.Add($"                                /*THIS VALUE DOESN'T HAVE A MAPPING*/ => {destinationValue},");
                     }

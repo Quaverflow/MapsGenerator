@@ -35,7 +35,7 @@ public class MapperBenchmark
     public CompanyDto UsingTryMapGenerator()
     {
         _generator.TryMap(_company, out var result);
-        return result;
+        return result!;
     }
 
     [Benchmark]
