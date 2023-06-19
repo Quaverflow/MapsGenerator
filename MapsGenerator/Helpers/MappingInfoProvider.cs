@@ -149,6 +149,7 @@ public static class MappingInfoProvider
 
         return mapFromEnums;
     }
+  
     public static List<PropertyMapFromPair> GetMapFromProperties(InvocationExpressionSyntax invocationExpressionSyntax)
     {
         var mappedProperties = new List<PropertyMapFromPair>();
@@ -180,7 +181,6 @@ public static class MappingInfoProvider
                     var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
 
                     mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
-
                 }
                 else if (expression.ArgumentList.Arguments[1].Expression is LambdaExpressionSyntax
                 {
@@ -207,6 +207,37 @@ public static class MappingInfoProvider
 
                     AddExpressionBodySource(destinationPropertyAccess, invocationExpression.ToString(), mappedProperties, parameterIdentifier ?? throw new InvalidOperationException());
                 }
+            }
+        }
+
+        return mappedProperties;
+    }
+    
+    public static List<PropertyMapFromConstant> GetMapFromConstantProperties(InvocationExpressionSyntax invocationExpressionSyntax)
+    {
+        var mappedProperties = new List<PropertyMapFromConstant>();
+
+        if (!CheckIsValidMapFrom(invocationExpressionSyntax, out var body) || body == null)
+        {
+            return mappedProperties;
+        }
+
+        foreach (var statement in body.Statements)
+        {
+            if (!IsTargetForMapFrom(statement, "MapFromConstantValue", 2, out var expression))
+            {
+                continue;
+            }
+
+            if (expression?.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
+                {
+                    Body: MemberAccessExpressionSyntax destinationPropertyAccess
+                } && expression.ArgumentList.Arguments[1].Expression is LiteralExpressionSyntax constantValue)
+            {
+                var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+
+                mappedProperties.Add(new(destinationAccessName, constantValue.ToString()));
+
             }
         }
 

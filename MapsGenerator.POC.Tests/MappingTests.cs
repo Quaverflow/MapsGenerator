@@ -62,9 +62,9 @@ public class MappingTests
 
             Assert.Equal(matching.PersonalDetails.Address.City, employee.Address.City);
             Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);
-            Assert.Equal(matching.PersonalDetails.FirstName, employee.FirstName);
             Assert.Equal(matching.PersonalDetails.LastName, employee.LastName);
-            Assert.Equal(matching.PersonalDetails.Age, employee.Age);
+            Assert.Equal("hello", employee.FirstName);
+            Assert.Equal(3, employee.Age);
             Assert.Equal(matching.PersonalDetails.Height, employee.Height);
             if (matching.Seniority == Seniority.Junior)
             {

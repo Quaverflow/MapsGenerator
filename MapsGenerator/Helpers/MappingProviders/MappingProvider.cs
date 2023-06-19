@@ -36,6 +36,15 @@ public static class MappingProvider
 
         GetMapFromMappings(context, destinationProperties, sourceProperties);
 
+        foreach (var constantValue in context.CurrentMap.MapFromConstantProperties)
+        {
+            if (context.CurrentNotMappedProperties
+                    .FirstOrDefault(x => x.Name == constantValue.Destination) is { } notMapped)
+            {
+                context.CurrentMappings.MapFromConstant.Add($"{notMapped.Name} = {constantValue.Value},");
+                context.CurrentNotMappedProperties.Remove(notMapped);
+            }
+        }
         foreach (var unmappedProperty in context.CurrentNotMappedProperties)
         {
             if (context.CurrentMap.EnsureAllDestinationPropertiesAreMapped)

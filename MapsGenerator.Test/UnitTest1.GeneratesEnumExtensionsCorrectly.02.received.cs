@@ -25,7 +25,7 @@ namespace MapsGenerator
                 Age = source.PersonalDetails.Age,
                 Address = Map<AddressDto>(source.PersonalDetails.Address),
                 Height = source.PersonalDetails.Height,
-                FirstName = /*MISSING MAPPING FOR TARGET PROPERTY.*/ ,
+                FirstName = "hello",
             };
         }
         
@@ -103,9 +103,7 @@ namespace MapsGenerator
             }
             
             Dictionary<System.Guid, PersonDto> MapBeesFromExpression(Company s)
-=> s =>
-                
-                    s.Employees.ToDictionary(a => a.Id, a => Map(a, out _));
+=> s.Employees.ToDictionary(a => a.Id, a => Map(a, out _));
 
         }
         

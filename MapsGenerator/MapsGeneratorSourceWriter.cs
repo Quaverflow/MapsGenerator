@@ -174,6 +174,11 @@ public class MapsGeneratorSourceWriter
         {
             builder.AppendLine(mapFrom, indent);
         }
+        
+        foreach (var mapFrom in mappings.MapFromConstant)
+        {
+            builder.AppendLine(mapFrom, indent);
+        }
 
         foreach (var mapFrom in mappings.UnmappedProperties)
         {

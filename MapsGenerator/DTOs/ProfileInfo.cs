@@ -17,6 +17,7 @@ public class ProfileInfo
     public bool IsEnum { get; }
     public InvocationExpressionSyntax InvocationExpressionSyntax { get; }
     public IReadOnlyList<string> ExcludedProperties { get; }
+    public IReadOnlyList<PropertyMapFromConstant> MapFromConstantProperties { get; }
     public IReadOnlyList<PropertyMapFromPair> MapFromProperties { get; }
     public IReadOnlyList<EnumValueMap> MapFromEnums { get; }
 
@@ -36,6 +37,7 @@ public class ProfileInfo
         InvocationExpressionSyntax = invocationExpressionSyntax;
         ExcludedProperties = MappingInfoProvider.GetExcludedProperties(InvocationExpressionSyntax);
         MapFromProperties = MappingInfoProvider.GetMapFromProperties(InvocationExpressionSyntax);
+        MapFromConstantProperties = MappingInfoProvider.GetMapFromConstantProperties(InvocationExpressionSyntax);
         MapFromEnums = MappingInfoProvider.GetMapFromEnums(InvocationExpressionSyntax);
         EnsureAllDestinationPropertiesAreMapped = MappingInfoProvider.GetEnsureAllDestinationPropertiesAreMapped(InvocationExpressionSyntax);
     }

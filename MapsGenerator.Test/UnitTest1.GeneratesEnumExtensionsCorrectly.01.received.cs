@@ -13,6 +13,10 @@ namespace MapsGenerator
         {
         }   
         
+        public void MapFromConstantValue<TObject, TDestinationProperty>(Func<TDestination, TDestinationProperty> destinationProperty, TObject sourceProperty)
+        {
+        }   
+        
         public void MapFromEnum<TSourceProperty, TDestinationProperty>(TDestinationProperty destinationProperty, TSourceProperty sourceProperty) 
             where TDestinationProperty : Enum where TSourceProperty : Enum
         {

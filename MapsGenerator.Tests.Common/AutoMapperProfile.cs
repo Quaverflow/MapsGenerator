@@ -14,7 +14,12 @@ public class AutoMapperProfile : Profile
             .ForMember(x => x.FirstName, y => y.MapFrom(z => z.PersonalDetails.FirstName))
             .ForMember(x => x.LastName, y => y.MapFrom(z => z.PersonalDetails.LastName))
             .ForMember(x => x.Age, y => y.MapFrom(z => z.PersonalDetails.Age))
-            .ForMember(x => x.Address, y => y.MapFrom(z => z.PersonalDetails.Address));
+            .ForMember(x => x.Address, y => y.MapFrom(z => z.PersonalDetails.Address))
+            .AfterMap((s,d) =>
+            {
+                d.FirstName = "hello";
+                d.Age = 3;
+            });
         
         CreateMap<Address, AddressDto>();
 
