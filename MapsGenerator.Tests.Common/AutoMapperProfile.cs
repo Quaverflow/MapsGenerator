@@ -13,7 +13,7 @@ public class AutoMapperProfile : Profile
         CreateMap<Employee, PersonDto>()
             .ForMember(x => x.Height, y => y.MapFrom(z => z.PersonalDetails.Height))
             .ForMember(x => x.FirstName, y => y.MapFrom(z => z.PersonalDetails.FirstName))
-            .ForMember(x => x.LastName, y => y.MapFrom(z => z.PersonalDetails.LastName))
+            .ForMember(x => x.LastName, y => y.Ignore())
             .ForMember(x => x.Age, y => y.MapFrom(z => z.PersonalDetails.Age))
             .ForMember(x => x.Address, y => y.MapFrom(z => z.PersonalDetails.Address))
             .ForMember(x => x.ExternalAddress, y => y.MapFrom(z => z.PersonalDetails.ExternalAddress))

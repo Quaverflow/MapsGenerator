@@ -75,7 +75,7 @@ public class MappingTests
             Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);   
             Assert.Equal(matching.PersonalDetails.ExternalAddress.City, employee.ExternalAddress.City);
             Assert.Equal(matching.PersonalDetails.ExternalAddress.Street, employee.ExternalAddress.Street);
-            Assert.Equal(matching.PersonalDetails.LastName, employee.LastName);
+            Assert.Null(employee.LastName);
             Assert.Equal("hello", employee.FirstName);
             Assert.Equal(3, employee.Age);
             Assert.Equal(matching.PersonalDetails.Height, employee.Height);
