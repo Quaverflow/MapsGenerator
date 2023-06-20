@@ -1,24 +1,30 @@
-﻿ using MapsGenerator.DTOs;
+﻿using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator.Helpers;
 
 public static class MappingInfoProvider
 {
-    //private static bool TryGetExpression(StatementSyntax statement, string name, int arguments)
-    //{
-    //    if (statement is not ExpressionStatementSyntax
-    //        {
-    //            Expression: InvocationExpressionSyntax
-    //            {
-    //                Expression: MemberAccessExpressionSyntax
-    //                {
-    //                    Name.Identifier.Text: name
-    //                },
-    //                ArgumentList.Arguments.Count: arguments
-    //            } expression
-    //        })
-    //}
+    private static bool IsMarchingExpression(StatementSyntax statement, string name, int arguments, out InvocationExpressionSyntax invocationExpression)
+    {
+        if (statement is ExpressionStatementSyntax
+            {
+                Expression: InvocationExpressionSyntax
+                {
+                    Expression: MemberAccessExpressionSyntax innerExpression
+                } expression
+            })
+        {
+            if (innerExpression.Name.Identifier.Text == name && expression.ArgumentList.Arguments.Count == arguments)
+            {
+                invocationExpression = expression;
+                return true;
+            }
+        }
+
+        invocationExpression = null!;
+        return false;
+    }
 
     public static List<string> GetExcludedProperties(InvocationExpressionSyntax invocationExpressionSyntax)
     {
@@ -36,17 +42,7 @@ public static class MappingInfoProvider
 
         foreach (var statement in body.Statements)
         {
-            if (statement is not ExpressionStatementSyntax
-                {
-                    Expression: InvocationExpressionSyntax
-                    {
-                        Expression: MemberAccessExpressionSyntax
-                        {
-                            Name.Identifier.Text: "Exclude"
-                        },
-                        ArgumentList.Arguments.Count: 1
-                    } expression
-                })
+            if (!IsMarchingExpression(statement, "Exclude", 1, out var expression))
             {
                 continue;
             }
@@ -76,25 +72,8 @@ public static class MappingInfoProvider
             return false;
         }
 
-        foreach (var statement in body.Statements)
-        {
-            if (statement is ExpressionStatementSyntax
-                {
-                    Expression: InvocationExpressionSyntax
-                    {
-                        Expression: MemberAccessExpressionSyntax
-                        {
-                            Name.Identifier.Text: "EnsureAllDestinationPropertiesAreMapped"
-                        },
-                        ArgumentList.Arguments.Count: 0
-                    }
-                })
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return body.Statements.Any(statement => 
+                !IsMarchingExpression(statement, "EnsureAllDestinationPropertiesAreMapped", 0, out _));
     }
 
     private static bool CheckIsValidMapFrom(InvocationExpressionSyntax invocationExpressionSyntax, out BlockSyntax? body)
@@ -114,25 +93,6 @@ public static class MappingInfoProvider
         return true;
     }
 
-    private static bool IsTargetForMapFrom(StatementSyntax? statement, string expressionName, int argsCount, out InvocationExpressionSyntax? expression)
-    {
-        expression = null;
-        if (statement is not ExpressionStatementSyntax
-            {
-                Expression: InvocationExpressionSyntax
-                {
-                    Expression: MemberAccessExpressionSyntax innerExpression,
-                } validExpression
-            })
-        {
-            return false;
-        }
-        expression = validExpression;
-
-        return expression.ArgumentList.Arguments.Count == argsCount ||
-               innerExpression.Name.Identifier.Text == expressionName;
-    }
-
     public static List<EnumValueMap> GetMapFromEnums(InvocationExpressionSyntax invocationExpressionSyntax)
     {
         var mapFromEnums = new List<EnumValueMap>();
@@ -143,7 +103,7 @@ public static class MappingInfoProvider
 
         foreach (var statement in body.Statements)
         {
-            if (!IsTargetForMapFrom(statement, "MapFromEnum", 2, out var expression))
+            if (!IsMarchingExpression(statement, "MapFromEnum", 2, out var expression))
             {
                 continue;
             }
@@ -160,7 +120,7 @@ public static class MappingInfoProvider
 
         return mapFromEnums;
     }
-  
+
     public static List<PropertyMapFromPair> GetMapFromProperties(InvocationExpressionSyntax invocationExpressionSyntax)
     {
         var mappedProperties = new List<PropertyMapFromPair>();
@@ -172,7 +132,7 @@ public static class MappingInfoProvider
 
         foreach (var statement in body.Statements)
         {
-            if (!IsTargetForMapFrom(statement, "MapFrom", 2, out var expression))
+            if (!IsMarchingExpression(statement, "MapFrom", 2, out var expression))
             {
                 continue;
             }
@@ -223,7 +183,7 @@ public static class MappingInfoProvider
 
         return mappedProperties;
     }
-    
+
     public static List<PropertyMapFromConstant> GetMapFromConstantProperties(InvocationExpressionSyntax invocationExpressionSyntax)
     {
         var mappedProperties = new List<PropertyMapFromConstant>();
@@ -235,7 +195,7 @@ public static class MappingInfoProvider
 
         foreach (var statement in body.Statements)
         {
-            if (!IsTargetForMapFrom(statement, "MapFromConstantValue", 2, out var expression))
+            if (!IsMarchingExpression(statement, "MapFromConstantValue", 2, out var expression))
             {
                 continue;
             }
