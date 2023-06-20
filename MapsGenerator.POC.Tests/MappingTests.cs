@@ -4,7 +4,6 @@ using AutoMapper;
 using MapsGenerator.Tests.Common;
 using MapsGenerator.Tests.Common.Models.Destination;
 using MapsGenerator.Tests.Common.Models.Source;
-using System.Linq;
 
 namespace MapsGenerator.POC.Tests;
 

@@ -1,6 +1,4 @@
-﻿using System.Text;
-using MapsGenerator.DTOs;
-using MapsGenerator.Helpers.Extensions;
+﻿using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis;
 
 namespace MapsGenerator.Helpers.MappingProviders;
@@ -36,17 +34,12 @@ public static class ComplexMappingProvider
 
     public static void InvokeExistingComplexPropertyMap(SourceWriterContext context, PropertyPair complexProperty, string? sourceName = null)
     {
-
         var invocation = $"Map<{complexProperty.DestinationProperty.Type}>(source.{sourceName ?? complexProperty.SourceProperty.Name})";
         context.CurrentMappings.MapFrom.Add($"{complexProperty.DestinationProperty.Name} = {invocation},");
-
     }
 
     private static bool ComplexPropertyMapExists(SourceWriterContext context, PropertyPair complexProperty)
-    {
-        return context.CurrentProfile.Maps.FirstOrDefault(x =>
+        => context.CurrentProfile.Maps.FirstOrDefault(x =>
             x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
             x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null;
-    }
-
 }
