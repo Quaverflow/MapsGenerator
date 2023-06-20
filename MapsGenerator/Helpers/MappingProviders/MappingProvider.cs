@@ -61,43 +61,55 @@ public static class MappingProvider
         {
             if (customMap.IsExpressionMap)
             {
-                GetExpressionMapping(context, destinationProperties, customMap);
+                CreateExpressionMapping(context, destinationProperties, customMap);
             }
             else
             {
-                var innerSourceProperty = SyntaxHelper.GetInnerProperty(context, sourceProperties, customMap.Source);
-                var innerDestinationProperty = destinationProperties.First(x => x.Name == customMap.Destination);
-
-                if (innerSourceProperty.IsComplexPropertySymbol())
-                {
-                    ComplexMappingProvider.InvokeExistingComplexPropertyMap(context,
-                        new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
-                }
-                else if (innerSourceProperty.Type.IsCollectionSymbol())
-                {
-                    GetMapFromCollectionMapping(context, customMap, innerDestinationProperty, innerSourceProperty);
-                }
-                else
-                {
-                    context.CurrentMappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
-                }
+                CreateMapFromMapping(context, destinationProperties, sourceProperties, customMap);
             }
 
-            if (context.CurrentNotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is { } notMapped)
-            {
-                context.CurrentNotMappedProperties.Remove(notMapped);
-            }
+            RemoveFromUnmappedList(context, customMap);
         }
     }
 
-    private static void GetExpressionMapping(SourceWriterContext context, IPropertySymbol[] destinationProperties,
+    private static void CreateMapFromMapping(SourceWriterContext context, IPropertySymbol[] destinationProperties,
+        IPropertySymbol[] sourceProperties, PropertyMapFromPair customMap)
+    {
+        var innerSourceProperty = SyntaxHelper.GetInnerProperty(context, sourceProperties, customMap.Source);
+        var innerDestinationProperty = destinationProperties.First(x => x.Name == customMap.Destination);
+
+        if (innerSourceProperty.IsComplexPropertySymbol())
+        {
+            ComplexMappingProvider.InvokeExistingComplexPropertyMap(context,
+                new PropertyPair(innerSourceProperty, innerDestinationProperty), customMap.Source);
+        }
+        else if (innerSourceProperty.Type.IsCollectionSymbol())
+        {
+            GetMapFromCollectionMapping(context, customMap, innerDestinationProperty, innerSourceProperty);
+        }
+        else
+        {
+            context.CurrentMappings.MapFrom.Add($"{customMap.Destination} = source.{customMap.Source},");
+        }
+    }
+
+    private static void RemoveFromUnmappedList(SourceWriterContext context, PropertyMapFromPair customMap)
+    {
+        if (context.CurrentNotMappedProperties.FirstOrDefault(x => x.Name == customMap.DestinationSimpleName) is
+            { } notMapped)
+        {
+            context.CurrentNotMappedProperties.Remove(notMapped);
+        }
+    }
+
+    private static void CreateExpressionMapping(SourceWriterContext context, IPropertySymbol[] destinationProperties,
         PropertyMapFromPair customMap)
     {
         var innerDestinationProperty = SyntaxHelper.GetInnerProperty(context, destinationProperties, customMap.Destination);
         var functionName = $"Map{customMap.Destination}FromExpression";
         var localFunction = @$"
             {innerDestinationProperty.Type} {functionName}({context.CurrentMap.SourceFullName} {customMap.LambdaIdentifier})
-{customMap.Source}
+            {customMap.Source}
 ";
 
         context.CurrentMappings.LocalFunctions.Add(localFunction.Replace("Mapper.", string.Empty));

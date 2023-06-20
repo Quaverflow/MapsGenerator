@@ -59,8 +59,11 @@ public static class EnumMappingProvider
     private static IFieldSymbol[] GetValues(IPropertySymbol property) 
         => property.Type.GetMembers().OfType<IFieldSymbol>().ToArray();
 
-    private static void CreateEnumMapSwitch(SourceWriterContext context, PropertyPair enumProperty, List<string> matchingEnumNames,
-        List<string> unmatchedEnumNames)
+    private static void CreateEnumMapSwitch(
+        SourceWriterContext context, 
+        PropertyPair enumProperty, 
+        IReadOnlyCollection<string> matchingEnumNames,
+        IReadOnlyCollection<string> unmatchedEnumNames)
     {
         var switchExpression = @$"(source.{enumProperty.SourceProperty.Name}) switch
                             {{
