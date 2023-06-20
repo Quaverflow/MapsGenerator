@@ -10,7 +10,6 @@ internal class CompanyProfile : MapperBase
     {
         Map<Company, CompanyDto>(x =>
         {
-            //x.MapFrom(d => d.Address, s => s.Address);
             x.MapFrom(d => d.TradingName, s => s.Name);
             x.MapFrom(d => d.Sector, s => s.Name);
             x.MapFrom(d => d.OrderIds, s => s.OrderIds);

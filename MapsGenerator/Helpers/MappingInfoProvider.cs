@@ -5,6 +5,21 @@ namespace MapsGenerator.Helpers;
 
 public static class MappingInfoProvider
 {
+    //private static bool TryGetExpression(StatementSyntax statement, string name, int arguments)
+    //{
+    //    if (statement is not ExpressionStatementSyntax
+    //        {
+    //            Expression: InvocationExpressionSyntax
+    //            {
+    //                Expression: MemberAccessExpressionSyntax
+    //                {
+    //                    Name.Identifier.Text: name
+    //                },
+    //                ArgumentList.Arguments.Count: arguments
+    //            } expression
+    //        })
+    //}
+
     public static List<string> GetExcludedProperties(InvocationExpressionSyntax invocationExpressionSyntax)
     {
         var excludedProperties = new List<string>();

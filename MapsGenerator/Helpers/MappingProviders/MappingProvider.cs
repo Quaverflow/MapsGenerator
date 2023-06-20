@@ -133,5 +133,6 @@ public static class MappingProvider
         SimpleMappingProvider.AddSimpleProperties(sourceProperties, destinationProperties, context);
         ComplexMappingProvider.AddComplexProperties(sourceProperties, destinationProperties, context);
         CollectionMappingProvider.AddCollectionProperties(sourceProperties, destinationProperties, context);
+        CommonMappingProvider.AddRemainingExcludedMaps(context);
     }
 }
