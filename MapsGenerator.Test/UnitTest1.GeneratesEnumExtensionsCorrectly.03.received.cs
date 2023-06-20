@@ -1,38 +1,38 @@
 ﻿//HintName: IMapGenerator.cs
-using ;
+using somenamespace;
 namespace MapsGenerator
 {
     public interface IMapGenerator
     {
         
 /// <summary>
-/// Profile <see cref="somenamespace.GeneratorProfile"/>
+/// Profile <see cref="somenamespace.PersonProfile"/>
 /// </summary>
-        PersonDto Map<T>(Employee source) where T : PersonDto;
+        somenamespace.PersonDto Map<T>(somenamespace.Employee source) where T : somenamespace.PersonDto;
+        
+/// <summary>
+/// Profile <see cref="somenamespace.PersonProfile"/>
+/// </summary>
+        bool TryMap(somenamespace.Employee source, out somenamespace.PersonDto? destination, Action<Exception>? onError = null);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(Employee source, out PersonDto? destination, Action<Exception>? onError = null);
+        somenamespace.AddressDto Map<T>(somenamespace.Address source) where T : somenamespace.AddressDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        AddressDto Map<T>(Address source) where T : AddressDto;
+        bool TryMap(somenamespace.Address source, out somenamespace.AddressDto? destination, Action<Exception>? onError = null);
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        bool TryMap(Address source, out AddressDto? destination, Action<Exception>? onError = null);
+        somenamespace.CompanyDto Map<T>(somenamespace.Company source) where T : somenamespace.CompanyDto;
         
 /// <summary>
 /// Profile <see cref="somenamespace.GeneratorProfile"/>
 /// </summary>
-        CompanyDto Map<T>(Company source) where T : CompanyDto;
-        
-/// <summary>
-/// Profile <see cref="somenamespace.GeneratorProfile"/>
-/// </summary>
-        bool TryMap(Company source, out CompanyDto? destination, Action<Exception>? onError = null);
+        bool TryMap(somenamespace.Company source, out somenamespace.CompanyDto? destination, Action<Exception>? onError = null);
     }
 }

@@ -110,14 +110,14 @@ public static class SyntaxHelper
     }
 
     public static bool IsSimplePropertySymbol(this IPropertySymbol property)
-        => property.Type.IsSimplePropertySymbol() && !property.IsEnum();
+        => property.Type.IsSimpleTypeSymbol() && !property.IsEnum();
 
     public static bool IsComplexPropertySymbol(this IPropertySymbol property) =>
-        !property.Type.IsSimplePropertySymbol()
+        !property.Type.IsSimpleTypeSymbol()
         && !property.Type.IsCollectionSymbol()
         && !property.IsEnum();
 
-    public static bool IsSimplePropertySymbol(this ITypeSymbol type)
+    public static bool IsSimpleTypeSymbol(this ITypeSymbol type)
         => type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Array || type.SpecialType == SpecialType.System_String;
 
     public static bool IsEnum(this IPropertySymbol property)
@@ -190,7 +190,7 @@ public static class SyntaxHelper
 
     public static bool IsCollectionSymbol(this ITypeSymbol typeSymbol)
     {
-        if (typeSymbol.IsSimplePropertySymbol())
+        if (typeSymbol.IsSimpleTypeSymbol())
         {
             return false;
         }
@@ -208,7 +208,7 @@ public static class SyntaxHelper
     public static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
     {
         var propertyNesting = nestedProperty.Split('.').ToArray();
-        var result = currentType.First(x => x.Name == propertyNesting[0]);
+        var result = currentType.FirstOrDefault(x => x.Name == propertyNesting[0]);
 
         foreach (var property in propertyNesting.Skip(1))
         {

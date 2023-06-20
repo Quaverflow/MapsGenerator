@@ -80,4 +80,5 @@ public static class Filter
     => classDeclaration.Members
         .OfType<ConstructorDeclarationSyntax>()
         .FirstOrDefault(x => !x.ParameterList.Parameters.Any());
+
 }

@@ -4,6 +4,7 @@ using AutoMapper;
 using MapsGenerator.Tests.Common;
 using MapsGenerator.Tests.Common.Models.Destination;
 using MapsGenerator.Tests.Common.Models.Source;
+using System.Linq;
 
 namespace MapsGenerator.POC.Tests;
 
@@ -46,8 +47,19 @@ public class MappingTests
 
         AssertEmployeesToPersonDto(company.Employees, result.Workers);
 
-        var ids = result.Bees.Keys.ToArray();
-        Assert.True(ids.OrderBy(x => x).SequenceEqual(company.Employees.Select(x => x.Id).OrderBy(x => x)));
+        var ids = result.Bees.Keys.Order().ToArray();
+        var orderIds = result.OrderIds.Order().ToArray();
+        var aliases = result.Aliases.Order().ToArray();
+        var alternativeNames = result.AlternativeNames.Order().ToArray();
+        var carpetsIdsCollected = result.CarpetsIdsCollected.Order().ToArray();
+        var petsNames = result.PetsNames.Order().ToArray();
+
+        Assert.True(ids.SequenceEqual(company.Employees.Select(x => x.Id).Order()));
+        Assert.True(orderIds.SequenceEqual(company.OrderIds.Order()));
+        Assert.True(aliases.SequenceEqual(company.Aliases.Order()));
+        Assert.True(alternativeNames.SequenceEqual(company.AlternativeNames.Order()));
+        Assert.True(carpetsIdsCollected.SequenceEqual(company.CarpetsIdsCollected.Order()));
+        Assert.True(petsNames.SequenceEqual(company.PetsNames.Order()));
 
         var employees = result.Bees.Values.ToArray();
         AssertEmployeesToPersonDto(company.Employees, employees);

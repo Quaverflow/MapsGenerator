@@ -5,6 +5,16 @@ namespace MapsGenerator.Helpers.MappingProviders;
 
 public static class CollectionMappingProvider
 {
+    private static readonly IReadOnlyDictionary<string, string> SupportedCollections =
+        new Dictionary<string, string>()
+        {
+            {"Queue", "Enqueue"},
+            {"Stack", "Push"},
+            {"List", "Add"},
+            { "HashSet", "Add"},
+            { "SortedSet", "Add"}
+        };
+
     public static void AddCollectionProperties(
         IPropertySymbol[] sourceProperties,
         IEnumerable<IPropertySymbol> destinationProperties,
@@ -17,114 +27,81 @@ public static class CollectionMappingProvider
 
         foreach (var collectionProperty in collectionPropertiesMatchingByName)
         {
-            if (CommonMappingProvider.UseCommonMappings(context, collectionProperty))
+            if (!CommonMappingProvider.UseCommonMappings(context, collectionProperty))
             {
-                continue;
+                context.CurrentNotMappedProperties.Add(collectionProperty.DestinationProperty);
             }
-
-            context.CurrentNotMappedProperties.Add(collectionProperty.DestinationProperty);
         }
     }
 
-
-    public static string GetLocalFunctionForCollection(IPropertySymbol innerDestinationProperty,
-        PropertyMapFromPair customMap, IPropertySymbol innerSourceProperty, string functionName)
-    {
-        var localFunction = string.Empty;
-        if (innerDestinationProperty.Type is IArrayTypeSymbol arrayType)
+    public static string GetLocalFunctionForCollection(IPropertySymbol destination,
+        PropertyMapFromPair customMap, IPropertySymbol source, string functionName) 
+        => destination.Type switch
         {
-            var collectionArgumentType = arrayType.ElementType.ToString();
+            IArrayTypeSymbol arrayType => BuildArrayLocalFunction(destination, source, functionName, arrayType),
+            INamedTypeSymbol namedType => BuildSupportedCollectionLocalFunction(destination, customMap, source, namedType),
+            _ => string.Empty
+        };
 
-            localFunction = @$"
+    private static string BuildSupportedCollectionLocalFunction(IPropertySymbol innerDestinationProperty,
+        PropertyMapFromPair customMap, IPropertySymbol innerSourceProperty, INamedTypeSymbol namedType)
+    {
+        //currently we only support single type collections
+        var collectionArgumentType = namedType.TypeArguments[0];
+
+        ThrowIfNotCollection(namedType);
+        var genericType = namedType.ConstructedFrom;
+
+        return @$"
+            {innerDestinationProperty.Type} Map{customMap.Destination}FromCollection({innerSourceProperty.Type} sourceCollection)
+            {{
+                var results = new {InitializeCollection(genericType, collectionArgumentType.Name)};
+                foreach(var item in sourceCollection)
+                {{
+                    var mappedItem = {GetMappingExpression(collectionArgumentType)}
+                    results.{SupportedCollections[genericType.Name]}(mappedItem);
+                }}
+
+                return results;
+            }}";
+    }
+
+    private static string BuildArrayLocalFunction(IPropertySymbol innerDestinationProperty,
+        IPropertySymbol innerSourceProperty, string functionName, IArrayTypeSymbol arrayType) 
+        => @$"
             {innerDestinationProperty.Type} {functionName}({innerSourceProperty.Type} sourceCollection)
             {{
-                var results = new {collectionArgumentType}[sourceCollection.Count()];
+                var results = new {arrayType.ElementType}[sourceCollection.Count()];
                 for (int i = 0; i < sourceCollection.Count(); i++)
                 {{
                     var item = sourceCollection[i];
-                    var mappedItem = Map<{collectionArgumentType}>(item);
+                    var mappedItem = {GetMappingExpression(arrayType.ElementType)}
                     results[i] = mappedItem;
                 }}
                 return results;
             }}";
-        }
 
-        if (innerDestinationProperty.Type is INamedTypeSymbol namedType)
-        {
-            var collectionArgumentType = string.Join(", ", namedType.TypeArguments.Select(x => x.ToString()));
-            var collectionType = $"{GetCollectionType(innerDestinationProperty.Type)}<{collectionArgumentType}>()";
-            var action = GetAddToCollectionActionName(innerDestinationProperty.Type);
-            localFunction = @$"
-            {innerDestinationProperty.Type} Map{customMap.Destination}FromCollection({innerSourceProperty.Type} sourceCollection)
-            {{
-                var results = new {collectionType};
-                foreach(var item in sourceCollection)
-                {{
-                    var mappedItem = Map<{collectionArgumentType}>(item);
-                    results.{action}(mappedItem);
-                }}
+    private static string GetMappingExpression(ITypeSymbol symbol) 
+        => symbol.IsSimpleTypeSymbol() 
+            ? "item;" 
+            : $"Map<{symbol}>(item);";
 
-                return results;
-            }}";
-        }
-
-        return localFunction;
-    }
-
-    private static string GetCollectionType(ITypeSymbol symbol)
+    private static string InitializeCollection(ISymbol genericType, string collectionArgumentType)
     {
-        var collectionTypeName = string.Empty;
-
-        if (symbol is INamedTypeSymbol { IsGenericType: true } namedType)
+        if (SupportedCollections.Keys.FirstOrDefault(x => x == genericType.Name)
+            is { } validCollection)
         {
-            var genericTypeDefinition = namedType.ConstructedFrom;
-
-            var containingNamespace = genericTypeDefinition.ContainingNamespace.ToString();
-            if (containingNamespace is "System.Collections" or "System.Collections.Generic")
-            {
-                collectionTypeName = genericTypeDefinition.Name switch
-                {
-                    "Queue" => "Queue",
-                    "SortedList" => "UNSUPPORTED MAPPING",
-                    "Stack" => "Stack",
-                    "List" => "List",
-                    "Dictionary" => "UNSUPPORTED MAPPING",
-                    "HashSet" => "HashSet",
-                    "SortedSet" => "SortedSet",
-                    _ => "UnknownCollection"
-                } ?? throw new InvalidOperationException();
-            }
+            return $"{validCollection}<{collectionArgumentType}>()";
         }
 
-        return collectionTypeName;
+        return $"{genericType.Name} is not a supported collection type";
     }
 
-    private static string GetAddToCollectionActionName(ITypeSymbol symbol)
+    private static void ThrowIfNotCollection(ISymbol genericType)
     {
-        var collectionTypeName = string.Empty;
-
-        if (symbol is INamedTypeSymbol { IsGenericType: true } namedType)
+        if (genericType.ContainingNamespace.ToString() is not ("System.Collections" or "System.Collections.Generic"))
         {
-            var genericTypeDefinition = namedType.ConstructedFrom;
-
-            var containingNamespace = genericTypeDefinition.ContainingNamespace.ToString();
-            if (containingNamespace is "System.Collections" or "System.Collections.Generic")
-            {
-                collectionTypeName = genericTypeDefinition.Name switch
-                {
-                    "Queue" => "Enqueue",
-                    "SortedList" => "Add",
-                    "Stack" => "Push",
-                    "List" => "Add",
-                    "Dictionary" => "Add",
-                    "HashSet" => "Add",
-                    "SortedSet" => "Add",
-                    _ => "UnknownCollection"
-                } ?? throw new InvalidOperationException();
-            }
+            throw new InvalidOperationException($"{genericType} is not a collection");
         }
-
-        return collectionTypeName;
     }
-
 }

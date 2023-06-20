@@ -25,6 +25,11 @@ public class AutoMapperProfile : Profile
 
         CreateMap<Company, CompanyDto>()
             .ForMember(x => x.TradingName, y => y.MapFrom(z => z.Name))
+            .ForMember(x => x.Aliases, y => y.MapFrom(z => new SortedSet<string>(z.Aliases)))
+            .ForMember(x => x.CarpetsIdsCollected, y => y.MapFrom(z =>new Stack<int>( z.CarpetsIdsCollected)))
+            .ForMember(x => x.OrderIds, y => y.MapFrom(z => new Queue<Guid>(z.OrderIds)))
+            .ForMember(x => x.AlternativeNames, y => y.MapFrom(z => new List<string>(z.AlternativeNames)))
+            .ForMember(x => x.PetsNames, y => y.MapFrom(z => new HashSet<string>(z.PetsNames)))
             .ForMember(x => x.Workers, y => y.MapFrom(z => z.Employees))
             .AfterMap((s, d, r) =>
             {
@@ -33,6 +38,5 @@ public class AutoMapperProfile : Profile
 
         CreateMap<Seniority, SeniorityDto>()
             .ConvertUsingEnumMapping(x => x.MapValue(Seniority.Junior, SeniorityDto.Starter));
-
     }
 }
