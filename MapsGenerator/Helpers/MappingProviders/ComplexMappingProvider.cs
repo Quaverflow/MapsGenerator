@@ -34,12 +34,12 @@ public static class ComplexMappingProvider
 
     public static void InvokeExistingComplexPropertyMap(SourceWriterContext context, PropertyPair complexProperty, string? sourceName = null)
     {
-        var invocation = $"Map<{complexProperty.DestinationProperty.Type}>(source.{sourceName ?? complexProperty.SourceProperty.Name})";
+        var invocation = $"MapTo{complexProperty.DestinationProperty.Type.ToString().Replace(".", string.Empty)}(source.{sourceName ?? complexProperty.SourceProperty.Name})";
         context.CurrentMappings.MapFrom.Add($"{complexProperty.DestinationProperty.Name} = {invocation},");
     }
 
     private static bool ComplexPropertyMapExists(SourceWriterContext context, PropertyPair complexProperty)
-        => context.CurrentProfile.Maps.FirstOrDefault(x =>
+        => context.AllMappings.FirstOrDefault(x =>
             x.SourceFullName == complexProperty.SourceProperty.Type.ToString() &&
             x.DestinationFullName == complexProperty.DestinationProperty.Type.ToString()) != null;
 }

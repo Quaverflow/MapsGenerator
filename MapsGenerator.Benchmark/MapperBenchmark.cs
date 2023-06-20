@@ -28,13 +28,13 @@ public class MapperBenchmark
     [Benchmark]
     public CompanyDto UsingMapGenerator()
     {
-        return _generator.Map<CompanyDto>(_company);
+        return _generator.MapToMapsGeneratorTestsCommonModelsDestinationCompanyDto(_company);
     }
 
     [Benchmark]
     public CompanyDto UsingTryMapGenerator()
     {
-        _generator.TryMap(_company, out var result);
+        _generator.TryMapToMapsGeneratorTestsCommonModelsDestinationCompanyDto(_company, out var result);
         return result!;
     }
 

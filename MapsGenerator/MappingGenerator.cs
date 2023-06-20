@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using MapsGenerator.DTOs;
 using MapsGenerator.Helpers;
@@ -13,6 +14,13 @@ public class MappingGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+//#if DEBUG
+//        if (!Debugger.IsAttached)
+//        {
+//            Debugger.Launch();
+//        }
+//#endif
+
         context.RegisterPostInitializationOutput(ctx =>
         {
             ctx.AddSource("MapperBase.g.cs", SourceText.From(SourceGenerationHelper.Mapper, Encoding.UTF8));

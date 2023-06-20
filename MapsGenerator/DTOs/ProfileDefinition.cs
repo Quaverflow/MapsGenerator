@@ -4,10 +4,10 @@ namespace MapsGenerator.DTOs;
 
 public class ProfileDefinition
 {
-    public ProfileInfo[] Maps { get; set; }
+    public MapInfo[] Maps { get; set; }
     public ClassDeclarationSyntax Profile { get; set; }
 
-    public ProfileDefinition(ProfileInfo[] maps, ClassDeclarationSyntax profile)
+    public ProfileDefinition(MapInfo[] maps, ClassDeclarationSyntax profile)
     {
         Maps = maps;
         Profile = profile;

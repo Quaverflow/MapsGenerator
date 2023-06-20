@@ -33,7 +33,7 @@ public class MappingTests
     [Fact]
     public void Generator_Test()
     {
-        var result =_generator.Map<CompanyDto>(_company);
+        var result =_generator.MapToMapsGeneratorTestsCommonModelsDestinationCompanyDto(_company);
         AssertCompanyMap(_company, result);
     }
 
@@ -72,7 +72,9 @@ public class MappingTests
             var matching = employees.First(x => x.Id == employee.Id);
 
             Assert.Equal(matching.PersonalDetails.Address.City, employee.Address.City);
-            Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);
+            Assert.Equal(matching.PersonalDetails.Address.Street, employee.Address.Street);   
+            Assert.Equal(matching.PersonalDetails.ExternalAddress.City, employee.ExternalAddress.City);
+            Assert.Equal(matching.PersonalDetails.ExternalAddress.Street, employee.ExternalAddress.Street);
             Assert.Equal(matching.PersonalDetails.LastName, employee.LastName);
             Assert.Equal("hello", employee.FirstName);
             Assert.Equal(3, employee.Age);

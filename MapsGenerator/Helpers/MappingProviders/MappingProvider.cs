@@ -72,7 +72,7 @@ public static class MappingProvider
         }
     }
 
-    private static void CreateMapFromMapping(SourceWriterContext context, IPropertySymbol[] destinationProperties,
+    private static void CreateMapFromMapping(SourceWriterContext context, IEnumerable<IPropertySymbol> destinationProperties,
         IPropertySymbol[] sourceProperties, PropertyMapFromPair customMap)
     {
         var innerSourceProperty = SyntaxHelper.GetInnerProperty(context, sourceProperties, customMap.Source);

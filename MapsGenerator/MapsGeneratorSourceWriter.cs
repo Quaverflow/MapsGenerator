@@ -88,8 +88,8 @@ public class MapsGeneratorSourceWriter
 
         _context.ProfileMethodsInfo.Add(profileMethodsInfo);
         var source = $"{_context.CurrentMap.SourceFullName} source";
-        var mapDeclaration = $"{_context.CurrentMap.DestinationFullName} Map<T>({source}) where T : {_context.CurrentMap.DestinationFullName}";
-        var tryMapDeclaration = $"bool TryMap({source}, out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
+        var mapDeclaration = $"{_context.CurrentMap.DestinationFullName} MapTo{_context.CurrentMap.DestinationFullName.Replace(".", string.Empty)}({source})";
+        var tryMapDeclaration = $"bool TryMapTo{_context.CurrentMap.DestinationFullName.Replace(".", string.Empty)}({source}, out {_context.CurrentMap.DestinationFullName}? destination, Action<Exception>? onError = null)";
 
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{mapDeclaration};", profileMethodsInfo.Documentation));
         _context.MapMethodsDefinitions.Add(new MethodDefinition($"{tryMapDeclaration};", profileMethodsInfo.Documentation));
@@ -134,7 +134,7 @@ public class MapsGeneratorSourceWriter
     private void AddTryBody(StringBuilder builder, int indent)
     {
         indent++;
-        builder.AppendLine($"destination = Map<{_context.CurrentMap.DestinationFullName}>(source);", indent);
+        builder.AppendLine($"destination = MapTo{_context.CurrentMap.DestinationFullName.Replace(".", string.Empty)}(source);", indent);
         builder.AppendLine("return true;", indent);
     }
 

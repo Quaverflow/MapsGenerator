@@ -24,12 +24,14 @@ public class SourceWriterContext
 
     public List<IPropertySymbol> CurrentNotMappedProperties { get; } = new();
     public ProfileDefinition CurrentProfile { get; set; } = null!;
-    public ProfileInfo CurrentMap { get; set; } = null!;
+    public MapInfo CurrentMap { get; set; } = null!;
     public Mapping CurrentMappings { get; } = new();
+    public MapInfo[] AllMappings { get; }
 
     public SourceWriterContext(List<ProfileDefinition> profileDefinitions, Compilation compilation)
     {
         ProfileDefinitions = profileDefinitions;
+        AllMappings = ProfileDefinitions.SelectMany(x => x.Maps).ToArray();
         Compilation = compilation;
     }
 

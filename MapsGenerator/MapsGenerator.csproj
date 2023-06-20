@@ -5,6 +5,9 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>true</ImplicitUsings>
 		<LangVersion>Latest</LangVersion>
+		<!--enable for debugging
+		<IsRoslynComponent>true</IsRoslynComponent>
+		<OutputType>Exe</OutputType>-->
 	</PropertyGroup>
 
 	<ItemGroup>

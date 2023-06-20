@@ -15,10 +15,10 @@ public static class CommonMappingProvider
         return IsDefinedAsMapFrom(context.CurrentMap, property);
     }
 
-    private static bool IsDefinedAsMapFrom(ProfileInfo mappingInfo, PropertyPair property)
+    private static bool IsDefinedAsMapFrom(MapInfo mappingInfo, PropertyPair property)
         => mappingInfo.MapFromProperties.FirstOrDefault(x =>
             x.Destination == property.DestinationProperty.Name) is not null;
 
-    private static bool IsExcluded(ProfileInfo mappingInfo, PropertyPair simpleProperty)
+    private static bool IsExcluded(MapInfo mappingInfo, PropertyPair simpleProperty)
         => mappingInfo.ExcludedProperties.Any(x => x == simpleProperty.DestinationProperty.Name);
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.Extensions.EnumMapping;
+using MapsGenerator.ExternalAssembly.TestData;
 using MapsGenerator.Tests.Common.Models.Destination;
 using MapsGenerator.Tests.Common.Models.Source;
 
@@ -15,13 +16,15 @@ public class AutoMapperProfile : Profile
             .ForMember(x => x.LastName, y => y.MapFrom(z => z.PersonalDetails.LastName))
             .ForMember(x => x.Age, y => y.MapFrom(z => z.PersonalDetails.Age))
             .ForMember(x => x.Address, y => y.MapFrom(z => z.PersonalDetails.Address))
-            .AfterMap((s,d) =>
+            .ForMember(x => x.ExternalAddress, y => y.MapFrom(z => z.PersonalDetails.ExternalAddress))
+            .AfterMap((_,d) =>
             {
                 d.FirstName = "hello";
                 d.Age = 3;
             });
         
         CreateMap<Address, AddressDto>();
+        CreateMap<Address, ExternalAssemblyAddressDto>();
 
         CreateMap<Company, CompanyDto>()
             .ForMember(x => x.TradingName, y => y.MapFrom(z => z.Name))

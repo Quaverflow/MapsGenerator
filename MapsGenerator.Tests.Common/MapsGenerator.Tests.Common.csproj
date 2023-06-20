@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\MapsGenerator.ExternalAssembly.TestData\MapsGenerator.ExternalAssembly.TestData.csproj" />
 		<ProjectReference Include="..\MapsGenerator\MapsGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 	<ItemGroup>

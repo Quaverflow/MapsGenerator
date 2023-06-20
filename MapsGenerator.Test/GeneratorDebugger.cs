@@ -1,8 +1,9 @@
 namespace MapsGenerator.Test;
 
 [UsesVerify]
-public class UnitTest1
+public class GeneratorDebugger
 {
+    //this test is only for debugging purposes
     [Fact]
     public Task GeneratesEnumExtensionsCorrectly()
     {

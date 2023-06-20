@@ -84,7 +84,7 @@ public static class CollectionMappingProvider
     private static string GetMappingExpression(ITypeSymbol symbol) 
         => symbol.IsSimpleTypeSymbol() 
             ? "item;" 
-            : $"Map<{symbol}>(item);";
+            : $"MapTo{symbol.ToString().Replace(".", string.Empty)}(item);";
 
     private static string InitializeCollection(ISymbol genericType, string collectionArgumentType)
     {

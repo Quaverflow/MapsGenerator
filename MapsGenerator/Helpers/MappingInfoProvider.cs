@@ -1,4 +1,4 @@
-﻿using MapsGenerator.DTOs;
+﻿ using MapsGenerator.DTOs;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MapsGenerator.Helpers;
