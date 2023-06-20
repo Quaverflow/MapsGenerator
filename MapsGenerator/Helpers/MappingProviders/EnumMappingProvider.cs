@@ -42,7 +42,7 @@ public static class EnumMappingProvider
             }
             else
             {
-                PopulateMatchingAndUnmatchingValues(sourceValues, destinationValue, matchingEnumNames, unmatchedEnumNames);
+                PopulateMatchingAndUnMatchingValues(sourceValues, destinationValue, matchingEnumNames, unmatchedEnumNames);
             }
         }
 
@@ -78,7 +78,7 @@ public static class EnumMappingProvider
     private static string CreateEnumMapRows(IReadOnlyCollection<string> names) 
         => names.Any() ? string.Join("\n", names) : string.Empty;
 
-    private static void PopulateMatchingAndUnmatchingValues(IFieldSymbol[] sourceValues, IFieldSymbol destinationValue,
+    private static void PopulateMatchingAndUnMatchingValues(IEnumerable<IFieldSymbol> sourceValues, ISymbol destinationValue,
         ICollection<string> matchingEnumNames, ICollection<string> unmatchedEnumNames)
     {
         if (HasMatchingValue(sourceValues, destinationValue, out var matching))

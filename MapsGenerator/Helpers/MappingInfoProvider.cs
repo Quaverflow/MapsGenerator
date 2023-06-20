@@ -108,7 +108,7 @@ public static class MappingInfoProvider
                 continue;
             }
 
-            if (expression?.ArgumentList.Arguments[1].Expression is MemberAccessExpressionSyntax sourcePropertyAccess
+            if (expression.ArgumentList.Arguments[1].Expression is MemberAccessExpressionSyntax sourcePropertyAccess
                 && expression.ArgumentList.Arguments[0].Expression is MemberAccessExpressionSyntax destinationPropertyAccess)
             {
                 var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
@@ -141,33 +141,41 @@ public static class MappingInfoProvider
                 continue;
             }
 
-            if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
-                {
-                    Body: MemberAccessExpressionSyntax sourcePropertyAccess
-                })
-            {
-                var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
-                var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
-                var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
-
-                mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
-            }
-            else if (expression.ArgumentList.Arguments[1].Expression is LambdaExpressionSyntax
-                     {
-                         Body: BlockSyntax innerExpressionBody
-                     })
-            {
-                var parameterIdentifier = GetParameterIdentifier(expression);
-                AddBlockBodySource(destinationPropertyAccess, innerExpressionBody.ToString(), mappedProperties, parameterIdentifier ?? throw new InvalidOperationException());
-            }
-            else if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax invocationExpression)
-            {
-                var parameterIdentifier = GetParameterIdentifier(expression);
-                AddExpressionBodySource(destinationPropertyAccess, invocationExpression.ToString(), mappedProperties, parameterIdentifier ?? throw new InvalidOperationException());
-            }
+            TryPopulateExpression(expression, destinationPropertyAccess, mappedProperties);
         }
 
         return mappedProperties;
+    }
+
+    private static void TryPopulateExpression(InvocationExpressionSyntax expression,
+        MemberAccessExpressionSyntax destinationPropertyAccess, List<PropertyMapFromPair> mappedProperties)
+    {
+        if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax
+            {
+                Body: MemberAccessExpressionSyntax sourcePropertyAccess
+            })
+        {
+            var sourceAccessName = GetNestedMemberAccessName(sourcePropertyAccess);
+            var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
+            var destinationPropertyName = destinationPropertyAccess.Name.Identifier.Text;
+
+            mappedProperties.Add(new(sourceAccessName, destinationAccessName, destinationPropertyName));
+        }
+        else if (expression.ArgumentList.Arguments[1].Expression is LambdaExpressionSyntax
+                 {
+                     Body: BlockSyntax innerExpressionBody
+                 })
+        {
+            var parameterIdentifier = GetParameterIdentifier(expression);
+            AddBlockBodySource(destinationPropertyAccess, innerExpressionBody.ToString(), mappedProperties,
+                parameterIdentifier ?? throw new InvalidOperationException());
+        }
+        else if (expression.ArgumentList.Arguments[1].Expression is SimpleLambdaExpressionSyntax invocationExpression)
+        {
+            var parameterIdentifier = GetParameterIdentifier(expression);
+            AddExpressionBodySource(destinationPropertyAccess, invocationExpression.ToString(), mappedProperties,
+                parameterIdentifier ?? throw new InvalidOperationException());
+        }
     }
 
     private static string? GetParameterIdentifier(InvocationExpressionSyntax expression)
@@ -197,7 +205,7 @@ public static class MappingInfoProvider
                 continue;
             }
 
-            if (expression?.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
+            if (expression.ArgumentList.Arguments[0].Expression is SimpleLambdaExpressionSyntax
                 {
                     Body: MemberAccessExpressionSyntax destinationPropertyAccess
                 } && expression.ArgumentList.Arguments[1].Expression is LiteralExpressionSyntax constantValue)
@@ -213,7 +221,7 @@ public static class MappingInfoProvider
     }
 
     private static void AddExpressionBodySource(MemberAccessExpressionSyntax destinationPropertyAccess,
-        string invocationExpression, List<PropertyMapFromPair> mappedProperties, string identifier = "")
+        string invocationExpression, ICollection<PropertyMapFromPair> mappedProperties, string identifier = "")
     {
         var destinationAccessName = GetNestedMemberAccessName(destinationPropertyAccess);
         var methodBody = invocationExpression.Substring(invocationExpression.IndexOf('.') + 1);

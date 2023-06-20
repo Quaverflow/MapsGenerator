@@ -70,7 +70,7 @@ public static class Filter
         {
             Expression: GenericNameSyntax
             {
-                Identifier: { Text: "Map" },
+                Identifier.Text: "Map",
                 TypeArgumentList.Arguments.Count: 2
             },
             ArgumentList.Arguments.Count: 0 or 1

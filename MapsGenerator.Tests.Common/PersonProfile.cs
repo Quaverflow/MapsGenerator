@@ -14,6 +14,7 @@ internal class PersonProfile : MapperBase
             x.MapFrom(d => d.Address, s => s.PersonalDetails.Address);
             x.MapFrom(d => d.ExternalAddress, s => s.PersonalDetails.ExternalAddress);
             x.MapFrom(d => d.Height, s => s.PersonalDetails.Height);
+            x.MapFrom(d => d.IP, s => s.PersonalDetails.IP.ToString());
             x.Exclude(d => d.LastName);
 
             x.EnsureAllDestinationPropertiesAreMapped();

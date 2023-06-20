@@ -1,6 +1,4 @@
-﻿using MapsGenerator.ExternalAssembly.TestData;
-
-namespace MapsGenerator.Tests.Common.Models.Source;
+﻿namespace MapsGenerator.Tests.Common.Models.Source;
 
 public class Person
 {
@@ -10,4 +8,5 @@ public class Person
     public int Height { get; set; }
     public Address ExternalAddress { get; set; }
     public Address Address { get; set; }
+    public int IP { get; set; }
 }

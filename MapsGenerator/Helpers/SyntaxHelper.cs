@@ -205,28 +205,32 @@ public static class SyntaxHelper
         return collectionType != null;
     }
 
-    public static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentType, string nestedProperty)
+    public static IPropertySymbol GetInnerProperty(SourceWriterContext context, IPropertySymbol[] currentTypeProperties, string nestedProperty)
     {
         var propertyNesting = nestedProperty.Split('.').ToArray();
-        var result = currentType.FirstOrDefault(x => x.Name == propertyNesting[0]);
+        var innerProperty = currentTypeProperties.FirstOrDefault(x => x.Name == propertyNesting[0]);
+        if (innerProperty == null)
+        {
+            throw new InvalidOperationException(
+                $"{nestedProperty} was not in the collection of properties:\n{string.Join("\n", currentTypeProperties.Select(x => x.Name))}");
+        }
 
         foreach (var property in propertyNesting.Skip(1))
         {
-            if (context.TypesProperties.TryGetValue(result.Type.Name, out var value))
+            if (context.TypesProperties.TryGetValue(innerProperty.Type.Name, out var value))
             {
-                currentType = value.Properties;
+                currentTypeProperties = value.Properties;
             }
             else
             {
-
-                var properties = result.Type.GetMembers().OfType<IPropertySymbol>().ToArray();
-                context.TypesProperties.Add(result.Type.Name, new TypeProperties(properties, result.Type));
-                currentType = properties;
+                var properties = innerProperty.Type.GetMembers().OfType<IPropertySymbol>().ToArray();
+                context.TypesProperties.Add(innerProperty.Type.Name, new TypeProperties(properties, innerProperty.Type));
+                currentTypeProperties = properties;
             }
 
-            result = currentType.First(x => x.Name == property);
+            innerProperty = currentTypeProperties.First(x => x.Name == property);
         }
 
-        return result;
+        return innerProperty;
     }
 }

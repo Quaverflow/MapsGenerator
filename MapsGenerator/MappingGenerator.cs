@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Text;
 using MapsGenerator.DTOs;
 using MapsGenerator.Helpers;
@@ -31,7 +30,7 @@ public class MappingGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(
                 predicate: static (s, _) => Filter.IsSyntaxTargetForGeneration(s),
                 transform: static (ctx, _) => Filter.GetSemanticTargetForGeneration(ctx))
-            .Where(static m => m is not null)!;
+            .Where(static m => m is not null);
 
         // Combine the selected classes with the `Compilation`
         var compilationAndEnums
